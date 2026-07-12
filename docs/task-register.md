@@ -9,7 +9,7 @@
 | P0 | Verify Elements read-write mount | Done | Phase 0 | Expected UUID mounted `rw`; sentinel present | Host `findmnt` and successful repository write |
 | P0 | Install Restic | Done | Phase 0 | `restic version` succeeds | Workspace-local Ubuntu 0.12.1 package |
 | P0 | Initial consistent local snapshot | Done | Elements rw, Restic, recovery password | `restic check --read-data` and local restore pass | Latest `dddc33cb`; full check and local restore passed 2026-07-12 |
-| P0 | Restore Elements read-write access | Pending | Elements currently mounts `ro` | Expected UUID mounted `rw`; sentinel present; local backup scope revalidated | Observed 2026-07-12; do not force a dirty/hibernated NTFS volume read-write |
+| P0 | Distinguish host and agent Elements mount views | Done | Agent sandbox bind is intentionally read-only | Host confirms expected UUID mounted `rw`; sentinel present | Agent `findmnt` must not be treated as host mount evidence; run backup validation on Bumblebeam |
 | P0 | Temporary Dave-OneDrive copy | Done | Remote verification commands | Restic-aware copy, check, remote restore pass | Three snapshots copied; `restic check --read-data-subset=1/10` passed; representative remote restore passed 2026-07-11 |
 | P0 | Exclude repository from Ultra-Magners sync | Blocked | Physical/remote client access | Repository absent from every desktop sync scope | Pending |
 | P1 | Git boundary and examples | Done | Runtime credentials remain ignored; reported exposure is unverified | Ignore audit clean; Compose examples validate | Working tree changes |
@@ -29,6 +29,6 @@
 | P2 | Gluetun/media recovery | Pending | Elements rw and network | Tunnel plus dependency tests pass | Pending |
 | P2 | Investigate Home Assistant Bluetooth scanner errors | Pending | Assess `hci0` integration/device state | Scanner starts/stops without repeated errors, or Bluetooth is deliberately disabled | Repeating `habluetooth.scanner` errors observed 2026-07-12 |
 | P2 | Restore Home Assistant Chromecast connectivity | Pending | Living Room TV reachability/discovery | Cast integration connects without retries | `pychromecast` retry observed for `192.168.1.202:8009` |
-| P2 | Daily timers and retention | Pending | Elements `rw`; remote destination explicitly authorised | Timer succeeds; retention dry-run matches 7/4/12 | Current mount is read-only; timer units not installed |
+| P2 | Daily timers and retention | Pending | Host-level Elements `rw` check; remote destination explicitly authorised | Timer succeeds; retention dry-run matches 7/4/12 | Agent bind is read-only by design; timer units not installed |
 | P2 | Monthly integrity/restore checks | Pending | Scheduled backup stable | Rotating subset and both restores pass | Pending |
 | P3 | Append-only/object-lock or offline copy | Pending | Backend decision | Host deletion credentials cannot remove protected copy | Pending |

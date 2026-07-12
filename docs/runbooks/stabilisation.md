@@ -44,13 +44,15 @@ defines `traefik-net` and the Traefik-only `host-services-net`; `Home_Media/comp
 defines `gluetun-net`. Keep their subnets and bridge names stable; dependent
 Compose projects should continue to refer to them as external networks.
 
-## 2. Repair Elements and run the first backup
+## 2. Verify Elements and run the first backup
 
 The backup script refuses the wrong UUID, a missing sentinel, a read-only mount,
 or a repository outside Elements. If NTFS is read-only on the host, inspect host
 logs and repair it from Windows where possible; do not force a read-write remount
 of a dirty or hibernated filesystem. A restricted sandbox may show its bind as
 read-only even when the host mount is healthy, so verify with host-level `findmnt`.
+Run the backup and restore commands on Bumblebeam itself; an agent sandbox's mount
+view is not a valid substitute for the host check.
 
 After Elements is healthy and mounted read-write:
 
