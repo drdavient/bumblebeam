@@ -19,7 +19,8 @@
   `*.home.arpa`, compatibility `*.svc.home.arpa`, and bare LAN hosts.
 - Shared Docker networks were recreated with stable identity: `gluetun-net` uses
   subnet `172.18.0.0/16` and bridge `br-gluetun`; `traefik-net` uses subnet
-  `172.26.0.0/16` and bridge `br-traefik`. Traefik and n8n restarted cleanly.
+  `172.26.0.0/16` and bridge `br-traefik`. Their owning Compose projects are Home
+  Media and Traefik respectively; Traefik and n8n restarted cleanly.
 - Host-level `findmnt` confirms `/dev/sdb1` UUID `72908AD6908A9FE9` is mounted
   read-write. The earlier read-only observation was the restricted sandbox bind.
 - Ubuntu Restic 0.12.1 is installed workspace-locally at `.local/usr/bin/restic`.

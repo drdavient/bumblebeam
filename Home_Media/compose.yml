@@ -1,0 +1,193 @@
+services:
+  vpn:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - gluetun-net
+    ports:
+      - 8888:8888/tcp          # Built-in HTTP control server
+      - 8989:8989              # Sonarr HTTP proxy
+      - 9117:9117              # Jackett
+      - 7878:7878              # Radarr
+      - 8112:8112              # Deluge web interface
+      - 8191:8191              # FlareSolverr
+      - 9696:9696              # Prowlarr
+      # - 8080:8080                  # Nginx web portal
+      # - 8388:8388/tcp              # Shadowsocks TCP
+      # - 8388:8388/udp              # Shadowsocks UDP
+    volumes:
+      - ./gluetun-files:/gluetun
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  torrent:
+    image: ghcr.io/linuxserver/deluge
+    container_name: deluge
+    # network_mode: bridge
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - UMASK=022 #optional
+      - DELUGE_LOGLEVEL=error #optional
+    volumes:
+      - ./deluge-config:/config
+      - /mnt/Elements/Downloads/Transmission/:/downloads
+    network_mode: "container:gluetun"
+    depends_on:
+      vpn:
+        condition: service_started
+      elements-waiter:
+        condition: service_healthy
+    restart: unless-stopped
+
+  radarr:
+    image: ghcr.io/linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PATH=/app/radarr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - UMASK_SET=022 #optional
+    volumes:
+      - ./radarr-config:/config
+      - /mnt/Elements/Video/Movies:/movies
+      - /mnt/Elements/Downloads/Transmission/:/downloads
+    depends_on:
+      vpn:
+        condition: service_started
+      elements-waiter:
+        condition: service_healthy
+    network_mode: "container:gluetun"
+    restart: unless-stopped
+
+  jackett:
+    image: ghcr.io/linuxserver/jackett
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - AUTO_UPDATE=true #optional
+      - RUN_OPTS=<run options here> #optional
+    volumes:
+      - ./jackett-config:/config
+      - /mnt/Elements/Downloads/Transmission/blackhole:/downloads
+    depends_on:
+      vpn:
+        condition: service_started
+      elements-waiter:
+        condition: service_healthy
+    network_mode: "container:gluetun"
+    restart: unless-stopped
+
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./sonarr-config/:/config
+      - /mnt/Elements/Video/TV:/tv
+      - /mnt/Elements/Downloads/Transmission/:/downloads
+    depends_on:
+      vpn:
+        condition: service_started
+      elements-waiter:
+        condition: service_healthy
+    network_mode: "container:gluetun"
+    restart: unless-stopped
+
+  prowlarr:
+    image: ghcr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./prowlarr-config:/config
+    depends_on:
+      vpn:
+        condition: service_started
+      elements-waiter:
+        condition: service_healthy
+    network_mode: "container:gluetun"
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - BROWSER_TIMEOUT=60000
+      - SESSION_TTL=600
+
+    depends_on:
+      vpn:
+        condition: service_started
+      elements-waiter:
+        condition: service_healthy
+    network_mode: "container:gluetun"
+    restart: unless-stopped
+
+  web:
+    image: nginx
+    container_name: web
+    volumes:
+      - /mnt/Elements/docker/www:/usr/share/nginx/html
+    ports:
+       - "8081:8081"
+    restart: unless-stopped
+    networks:
+      - default
+    depends_on:
+      elements-waiter:
+        condition: service_healthy
+
+  elements-waiter:
+    image: alpine
+    container_name: elements-waiter
+    command: >
+      sh -c "
+        echo 'Waiting for Elements disk...';
+        while true; do
+          if [ -f /mnt/Elements/.mount-ok ]; then
+            echo 'Real disk mounted';
+            tail -f /dev/null;
+          fi
+          echo 'Still waiting...';
+          sleep 5;
+        done
+      "
+    healthcheck:
+      test: ["CMD", "sh", "-c", "[ -f /mnt/Elements/.mount-ok ]"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 20s
+    volumes:
+      - /mnt/Elements:/mnt/Elements:ro
+
+
+
+networks:
+  gluetun-net:
+    name: gluetun-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-gluetun
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1

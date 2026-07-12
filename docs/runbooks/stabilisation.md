@@ -39,8 +39,8 @@ Before the first Git commit:
 For future commits, review `git diff --cached` and keep credentials and runtime
 state outside Git. The initial configuration and operations commit is now present.
 
-Shared Docker networks are defined in `ops/networks/compose.yml` and can be
-created or checked idempotently with `ops/networks/ensure-networks.sh`. Keep
+Shared Docker networks are owned by their service stacks: `traefik/compose.yml`
+defines `traefik-net`, and `Home_Media/compose.yml` defines `gluetun-net`. Keep
 their subnets and bridge names stable; dependent Compose projects should continue
 to refer to them as external networks.
 

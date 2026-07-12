@@ -68,7 +68,9 @@ thumbnails/
 Thumbnails/
 
 # Service runtime trees (protected by encrypted backup, not Git)
-Home_Media/
+Home_Media/*
+!Home_Media/compose.yml
+!Home_Media/.env.example
 HomeAssistant/hadata/.storage/
 HomeAssistant/hadata/.HA_VERSION
 HomeAssistant/hadata/backups/
