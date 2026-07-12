@@ -1,0 +1,22 @@
+services: {}
+
+networks:
+  gluetun-net:
+    name: gluetun-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-gluetun
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
+
+  traefik-net:
+    name: traefik-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-traefik
+    ipam:
+      config:
+        - subnet: 172.26.0.0/16
+          gateway: 172.26.0.1

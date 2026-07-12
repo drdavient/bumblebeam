@@ -3,7 +3,7 @@
 ## Passed
 
 - Every eligible Compose project validates with its sanitised example environment:
-  Home Assistant, Home Media, ITS codex-gsd, Cloudflare DDNS, mount-watcher, n8n,
+  Home Assistant, Home Media, Cloudflare DDNS, mount-watcher, n8n,
   Plex, Structurizr, and Traefik.
 - Shell syntax validation passes for every script under `ops/backup/` and for
   `mount-watcher/mount-rebooter.sh`.
@@ -17,6 +17,9 @@
 - HA secrets, n8n config, Home Media `.env`, and Deluge auth are mode 600.
 - Plex now advertises `http://192.168.1.15:32400/`; Traefik and n8n list canonical
   `*.home.arpa`, compatibility `*.svc.home.arpa`, and bare LAN hosts.
+- Shared Docker networks were recreated with stable identity: `gluetun-net` uses
+  subnet `172.18.0.0/16` and bridge `br-gluetun`; `traefik-net` uses subnet
+  `172.26.0.0/16` and bridge `br-traefik`. Traefik and n8n restarted cleanly.
 - Host-level `findmnt` confirms `/dev/sdb1` UUID `72908AD6908A9FE9` is mounted
   read-write. The earlier read-only observation was the restricted sandbox bind.
 - Ubuntu Restic 0.12.1 is installed workspace-locally at `.local/usr/bin/restic`.
@@ -59,6 +62,7 @@
   contains no evidence of external exposure; account-wide Plex reauthentication
   was declined. OneDrive desktop exclusion, account MFA/recovery, and creation of
   the dedicated backup identity still require account-owner interaction.
-- Root Git contains no commit. The obsolete empty `Home_Media/.git` boundary and
-  the earlier `ITS_Home_Media/` codex-gsd attempt were removed; `Home_Media/`
-  remains as protected runtime state.
+- The obsolete empty `Home_Media/.git` boundary and the earlier
+  `ITS_Home_Media/` codex-gsd attempt were removed; `Home_Media/` remains as
+  protected runtime state. The root project and agent configuration are committed
+  on `main`.

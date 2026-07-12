@@ -36,8 +36,13 @@ Before the first Git commit:
    git diff --cached --name-only
    ```
 
-Do not create Git history until the old tokens are invalid and `git diff --cached`
-contains only reviewed declarative files.
+For future commits, review `git diff --cached` and keep credentials and runtime
+state outside Git. The initial configuration and operations commit is now present.
+
+Shared Docker networks are defined in `ops/networks/compose.yml` and can be
+created or checked idempotently with `ops/networks/ensure-networks.sh`. Keep
+their subnets and bridge names stable; dependent Compose projects should continue
+to refer to them as external networks.
 
 ## 2. Repair Elements and run the first backup
 
