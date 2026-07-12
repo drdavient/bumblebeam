@@ -55,7 +55,8 @@
   latest same-day snapshot. The final snapshot's representative restore passed.
 - The rebuilt privileged mount-watcher uses the correct Alpine shell, confirms the
   host UUID is read-write, exits successfully, and has Docker restart policy `no`.
-  A systemd one-shot unit is supplied as the deliberate host-boot trigger.
+  Its systemd one-shot unit is installed and enabled; the 2026-07-12 execution
+  verified `/dev/sdb1` read-write, reset the reboot counter, and exited 0.
 
 ## Blocked or not yet executed
 
