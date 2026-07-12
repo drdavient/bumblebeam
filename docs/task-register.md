@@ -21,7 +21,7 @@
 | P1 | Install one-shot Elements boot unit | Pending | Interactive sudo/root authority | Enabled unit runs once at boot without gating services; container exits 0 with restart policy `no` | Unit supplied under `mount-watcher/systemd/` |
 | P1 | Canonical Traefik/Plex configuration | Done | Runtime deployment waits on backup; account credential changes remain deferred | Compose validates; canonical aliases and correct advertised IP render | `docs/evidence/2026-07-11-implementation.md` |
 | P1 | Dedicated backup identity | Pending | After initial recovery safety | Two scheduled backups plus remote restore pass | Pending |
-| P1 | Canonical DNS records and DHCP search domain | Blocked | LAN DNS/router access | All canonical names resolve to `192.168.1.15` | Pending |
+| P1 | Host/service DNS namespaces | Partial | GL.iNet owns DNS/DHCP; validate from LAN clients | Host records use `*.home.arpa`; wildcard/bare services use `*.svc.home.arpa` | ADR 0003; Bumblebeam DNS verification |
 | P1 | Home Assistant recovery | Partial | Proxy path restored; UI and automation test remain | UI + automation test pass | Direct and canonical proxy return 200 through `br-host-svc` |
 | P1 | Plex recovery | Partial | Playback and ownership test; token rotation deferred | Ownership + playback pass | Direct and canonical proxy identity = 200 |
 | P2 | n8n recovery | Partial | Recreate after security gate; webhook test | UI + webhook pass | Bare and compatibility proxy = 200; new canonical label not deployed |

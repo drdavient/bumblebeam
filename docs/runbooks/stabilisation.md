@@ -121,10 +121,12 @@ delete data using any continuously available OneDrive credential.
 
 ## 5. DNS and service recovery
 
-In the LAN DNS server, create A/host records for `plex`, `hass`, `n8n`, `traefik`,
-`sonarr`, `radarr`, `prowlarr`, `jackett`, and `deluge` under `home.arpa`, all at
-`192.168.1.15`. Retain equivalent `svc.home.arpa` aliases temporarily and advertise
-`home.arpa` through DHCP.
+On the GL.iNet DNS/DHCP server (`192.168.1.2`), maintain explicit host records for
+`bumblebeam.home.arpa` (`192.168.1.15`), `vodafone.home.arpa` (`192.168.1.1`), and
+`glinet.home.arpa` (`192.168.1.2`). Keep the wildcard
+`*.svc.home.arpa → 192.168.1.15` for reverse-proxied applications and advertise
+`svc.home.arpa` through DHCP. Do not create individual `*.home.arpa` service
+records.
 
 Recover in this order and record evidence in `docs/evidence/`:
 
@@ -149,10 +151,10 @@ canonical and compatibility hostnames afterward.
 Example LAN-client checks:
 
 ```sh
-getent ahostsv4 hass.home.arpa plex.home.arpa n8n.home.arpa
-curl --fail --max-time 10 -I http://hass.home.arpa
-curl --fail --max-time 10 http://plex.home.arpa/identity
-curl --fail --max-time 10 -I http://n8n.home.arpa
+getent ahostsv4 hass hass.svc.home.arpa bumblebeam.home.arpa
+curl --fail --max-time 10 -I http://hass.svc.home.arpa
+curl --fail --max-time 10 http://plex.svc.home.arpa/identity
+curl --fail --max-time 10 -I http://n8n.svc.home.arpa
 docker compose -f HomeAssistant/compose.yml ps
 docker compose -f plex/compose.yml ps
 docker compose -f n8n/compose.yml ps

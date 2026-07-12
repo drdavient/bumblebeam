@@ -3,9 +3,9 @@
 Declarative configuration, operational scripts, runbooks, architecture decisions,
 and recovery evidence for the services hosted on Bumblebeam (`192.168.1.15`).
 
-The canonical LAN namespace is `service.home.arpa`. `service.svc.home.arpa` is a
-temporary compatibility alias, and bare hostnames are retained for convenient LAN
-clients.
+LAN names are split by role: real hosts use `host.home.arpa`; reverse-proxied
+applications use `service.svc.home.arpa`. DHCP advertises `svc.home.arpa`, so bare
+service names such as `http://hass/` remain convenient for LAN clients.
 
 Runtime databases, plaintext secrets, certificates, logs, caches, downloads, Plex
 metadata, and bulk media are intentionally excluded from Git. They belong in the

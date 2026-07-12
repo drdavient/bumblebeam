@@ -36,7 +36,7 @@ http:
       entryPoints: ["web"]
 
     traefik-dashboard:
-      rule: "Host(`traefik`, `traefik.home.arpa`)"
+      rule: "Host(`traefik`, `traefik.svc.home.arpa`, `traefik.home.arpa`)"
       service: api@internal
       entryPoints: ["web"]
 

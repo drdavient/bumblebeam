@@ -14,9 +14,10 @@ and recovery evidence for the services hosted on Bumblebeam (`192.168.1.15`). Se
 
 ## Ground rules
 
-- **Canonical LAN namespace** is `service.home.arpa` (see `docs/adr/0001-canonical-lan-namespace.md`).
-  `*.svc.home.arpa` is a temporary compatibility alias; bare hostnames are retained
-  for LAN convenience.
+- **LAN naming is split by role** (see `docs/adr/0003-host-and-service-namespaces.md`):
+  real hosts use `host.home.arpa`; reverse-proxied applications use
+  `service.svc.home.arpa`. DHCP advertises `svc.home.arpa`, so bare service names
+  resolve for LAN convenience. Do not add per-service `*.home.arpa` records.
 - **Never commit secrets or runtime state.** The data classification and Git
   boundary are defined in `docs/inventory.md`: secrets, databases, certificates,
   logs, caches, Plex metadata, and bulk media belong in the encrypted Restic backup

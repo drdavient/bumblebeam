@@ -15,8 +15,8 @@
 - Eligible root and Home Media files contain no matches for the audited high-risk
   token/key shapes. This is a heuristic, not proof that credentials are absent.
 - HA secrets, n8n config, Home Media `.env`, and Deluge auth are mode 600.
-- Plex now advertises `http://192.168.1.15:32400/`; Traefik and n8n list canonical
-  `*.home.arpa`, compatibility `*.svc.home.arpa`, and bare LAN hosts.
+- Plex now advertises `http://192.168.1.15:32400/`; reverse-proxied services use
+  `*.svc.home.arpa` and bare LAN names, while real devices use `*.home.arpa`.
 - Shared Docker networks were recreated with stable identity: `gluetun-net` uses
   subnet `172.18.0.0/16` and bridge `br-gluetun`; `traefik-net` uses subnet
   `172.26.0.0/16` and bridge `br-traefik`. Their owning Compose projects are Home
