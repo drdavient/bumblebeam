@@ -25,6 +25,8 @@
   `br-host-svc`) with fixed source `172.22.0.10`; host-service traffic no longer
   uses the Gluetun network. The Git-managed Bumblebeam portal returns HTTP 200,
   and the retired Elements-hosted page was removed.
+- The narrow UFW rule for `172.22.0.10` on `br-host-svc` restores the Home
+  Assistant proxy path; direct and canonical proxy requests both return HTTP 200.
 - Host-level `findmnt` confirms `/dev/sdb1` UUID `72908AD6908A9FE9` is mounted
   read-write. The earlier read-only observation was the restricted sandbox bind.
 - Ubuntu Restic 0.12.1 is installed workspace-locally at `.local/usr/bin/restic`.
@@ -57,8 +59,6 @@
 
 ## Blocked or not yet executed
 
-- HA canonical/compatibility proxy routes time out because the host still needs
-  an interactive UFW rule permitting `172.22.0.10` on `br-host-svc` to TCP 8123.
 - n8n canonical `n8n.home.arpa` now returns HTTP 200 after recreation.
 - LAN DNS and end-user automation/playback/webhook tests remain unverified.
 - Plex/Cloudflare token rotation remains deferred because the current checkout
