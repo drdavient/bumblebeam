@@ -5,7 +5,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"
     environment:
       CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN:?set CF_DNS_API_TOKEN in traefik/.env}
     volumes:
@@ -14,8 +13,13 @@ services:
       - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
       - ./letsencrypt:/letsencrypt
     networks:
-      - gluetun-net
-      - traefik-net
+      gluetun-net:
+        gw_priority: 0
+      traefik-net:
+        gw_priority: 0
+      host-services-net:
+        ipv4_address: 172.22.0.10
+        gw_priority: 100
     restart: unless-stopped
 
 networks:
@@ -30,3 +34,12 @@ networks:
       config:
         - subnet: 172.26.0.0/16
           gateway: 172.26.0.1
+  host-services-net:
+    name: host-services-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-host-svc
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+          gateway: 172.22.0.1

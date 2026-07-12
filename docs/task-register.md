@@ -16,12 +16,13 @@
 | P1 | Remove obsolete nested Git directories | Done | Obsolete attempts removed after backup evidence | Root Git sees only the intended repository boundary | `Home_Media/.git` and `ITS_Home_Media/` removed |
 | P1 | Fix Cloudflare DDNS Compose | Done | Runtime credential rotation is deferred; local values remain ignored | `docker compose ... config --quiet` passes | Working tree changes |
 | P1 | Add mount-safe backup automation | Done | Phase 1 | Read-only/missing/wrong Elements mount exits before repository creation | `docs/evidence/2026-07-11-implementation.md` |
-| P1 | Pin shared Docker network identity | Done | Preserve current subnets while stabilising bridge names | `gluetun-net`=`172.18.0.0/16` on `br-gluetun`; `traefik-net`=`172.26.0.0/16` on `br-traefik` | `Home_Media/compose.yml`, `traefik/compose.yml`; host verification after recreation |
+| P1 | Pin shared Docker network identity | Done | Preserve current subnets while stabilising bridge names | Gluetun=`172.18.0.0/16` on `br-gluetun`; Traefik=`172.26.0.0/16` on `br-traefik`; host services=`172.22.0.0/24` on `br-host-svc` | `Home_Media/compose.yml`, `traefik/compose.yml`; host verification after recreation |
+| P1 | Revive Bumblebeam service portal | Done | Git-managed static portal, no Elements dependency | `bumblebeam.home.arpa` returns 200; portal has no host port or Gluetun attachment | `portal/`; Traefik labels |
 | P1 | Install one-shot Elements boot unit | Pending | Interactive sudo/root authority | Enabled unit runs once at boot without gating services; container exits 0 with restart policy `no` | Unit supplied under `mount-watcher/systemd/` |
 | P1 | Canonical Traefik/Plex configuration | Done | Runtime deployment waits on backup; account credential changes remain deferred | Compose validates; canonical aliases and correct advertised IP render | `docs/evidence/2026-07-11-implementation.md` |
 | P1 | Dedicated backup identity | Pending | After initial recovery safety | Two scheduled backups plus remote restore pass | Pending |
 | P1 | Canonical DNS records and DHCP search domain | Blocked | LAN DNS/router access | All canonical names resolve to `192.168.1.15` | Pending |
-| P1 | Home Assistant recovery | Partial | Host firewall rule for Traefik-to-HA | UI + automation test pass | Direct 8123 = 200; proxy currently times out |
+| P1 | Home Assistant recovery | Partial | Interactive sudo to add the narrow `br-host-svc` UFW rule | UI + automation test pass | Direct 8123 = 200; Traefik source is fixed at `172.22.0.10` |
 | P1 | Plex recovery | Partial | Playback and ownership test; token rotation deferred | Ownership + playback pass | Direct and canonical proxy identity = 200 |
 | P2 | n8n recovery | Partial | Recreate after security gate; webhook test | UI + webhook pass | Bare and compatibility proxy = 200; new canonical label not deployed |
 | P2 | Gluetun/media recovery | Pending | Elements rw and network | Tunnel plus dependency tests pass | Pending |

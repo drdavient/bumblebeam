@@ -40,9 +40,9 @@ For future commits, review `git diff --cached` and keep credentials and runtime
 state outside Git. The initial configuration and operations commit is now present.
 
 Shared Docker networks are owned by their service stacks: `traefik/compose.yml`
-defines `traefik-net`, and `Home_Media/compose.yml` defines `gluetun-net`. Keep
-their subnets and bridge names stable; dependent Compose projects should continue
-to refer to them as external networks.
+defines `traefik-net` and the Traefik-only `host-services-net`; `Home_Media/compose.yml`
+defines `gluetun-net`. Keep their subnets and bridge names stable; dependent
+Compose projects should continue to refer to them as external networks.
 
 ## 2. Repair Elements and run the first backup
 
@@ -135,9 +135,16 @@ Recover in this order and record evidence in `docs/evidence/`:
    harmless end-to-end download/import test.
 
 If HA works on `192.168.1.15:8123` but its Traefik route times out, test port 8123
-from inside Traefik. Permit only Traefik's Docker bridge subnets/interfaces to
-reach TCP 8123 in the host firewall; do not broadly disable the firewall. Re-test
-both canonical and compatibility hostnames afterward.
+from inside Traefik. Traefik reaches host-networked services through
+`br-host-svc` as `172.22.0.10`; permit only that source to reach TCP 8123:
+
+```sh
+sudo ufw allow in on br-host-svc from 172.22.0.10 to any port 8123 proto tcp \
+  comment 'Traefik to Home Assistant'
+```
+
+Do not permit Home Assistant through `br-gluetun` or `br-traefik`. Re-test both
+canonical and compatibility hostnames afterward.
 
 Example LAN-client checks:
 

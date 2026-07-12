@@ -21,6 +21,10 @@
   subnet `172.18.0.0/16` and bridge `br-gluetun`; `traefik-net` uses subnet
   `172.26.0.0/16` and bridge `br-traefik`. Their owning Compose projects are Home
   Media and Traefik respectively; Traefik and n8n restarted cleanly.
+- Traefik now has a dedicated `host-services-net` (`172.22.0.0/24`,
+  `br-host-svc`) with fixed source `172.22.0.10`; host-service traffic no longer
+  uses the Gluetun network. The Git-managed Bumblebeam portal returns HTTP 200,
+  and the retired Elements-hosted page was removed.
 - Host-level `findmnt` confirms `/dev/sdb1` UUID `72908AD6908A9FE9` is mounted
   read-write. The earlier read-only observation was the restricted sandbox bind.
 - Ubuntu Restic 0.12.1 is installed workspace-locally at `.local/usr/bin/restic`.
@@ -53,11 +57,9 @@
 
 ## Blocked or not yet executed
 
-- HA canonical/compatibility proxy routes time out because Traefik cannot reach
-  port 8123 on the host, although the host/LAN address returns 200. A narrow host
-  firewall allowance for Traefik's bridge subnet(s) is required.
-- n8n canonical `n8n.home.arpa` returns 404 because its updated Docker label is
-  declarative only; the container was restarted, not recreated.
+- HA canonical/compatibility proxy routes time out because the host still needs
+  an interactive UFW rule permitting `172.22.0.10` on `br-host-svc` to TCP 8123.
+- n8n canonical `n8n.home.arpa` now returns HTTP 200 after recreation.
 - LAN DNS and end-user automation/playback/webhook tests remain unverified.
 - Plex/Cloudflare token rotation remains deferred because the current checkout
   contains no evidence of external exposure; account-wide Plex reauthentication

@@ -30,9 +30,9 @@ http:
       service: deluge
       entryPoints: ["web"]
 
-    bumblebeam:
-      rule: "Host(`bumblebeam`, `bumblebeam.home.arpa`)"
-      service: bumblebeam
+    prowlarr:
+      rule: "Host(`prowlarr`, `prowlarr.home.arpa`, `prowlarr.svc.home.arpa`)"
+      service: prowlarr
       entryPoints: ["web"]
 
     traefik-dashboard:
@@ -71,8 +71,7 @@ http:
         servers:
           - url: "http://gluetun:8112"
 
-    bumblebeam:
+    prowlarr:
       loadBalancer:
         servers:
-          - url: "http://192.168.1.15:8080"
-        passHostHeader: true
+          - url: "http://gluetun:9696"

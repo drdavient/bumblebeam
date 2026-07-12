@@ -141,20 +141,6 @@ services:
     network_mode: "container:gluetun"
     restart: unless-stopped
 
-  web:
-    image: nginx
-    container_name: web
-    volumes:
-      - /mnt/Elements/docker/www:/usr/share/nginx/html
-    ports:
-       - "8081:8081"
-    restart: unless-stopped
-    networks:
-      - default
-    depends_on:
-      elements-waiter:
-        condition: service_healthy
-
   elements-waiter:
     image: alpine
     container_name: elements-waiter
