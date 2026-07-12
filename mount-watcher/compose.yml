@@ -1,0 +1,13 @@
+services:
+  mount-rebooter:
+    build: .
+    container_name: mount-rebooter
+    pid: host
+    privileged: true
+    volumes:
+      - /mnt/Elements:/mnt/Elements:ro
+      - /var/log/mount-rebooter:/var/log/mount-rebooter
+      - /var/lib/mount-rebooter:/state
+    environment:
+      ALERT_URL: ""    # fill later with n8n webhook
+    restart: "no"

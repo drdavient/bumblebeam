@@ -1,0 +1,11 @@
+services:
+  cloudflare-ddns:
+    image: oznu/cloudflare-ddns:latest
+    container_name: cloudflare-ddns
+    restart: unless-stopped
+    environment:
+      API_KEY: ${API_KEY:?set API_KEY in cloudflare-ddns/.env}
+      ZONE: ${CLOUDFLARE_ZONE:-drdavient.com}
+      SUBDOMAIN: ${CLOUDFLARE_SUBDOMAIN:-n8n}
+      PROXIED: ${CLOUDFLARE_PROXIED:-false}
+      INTERVAL: ${CLOUDFLARE_INTERVAL:-300}

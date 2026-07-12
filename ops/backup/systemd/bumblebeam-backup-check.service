@@ -1,0 +1,9 @@
+[Unit]
+Description=Monthly Bumblebeam Restic integrity and restore check
+RequiresMountsFor=/mnt/Elements
+OnFailure=bumblebeam-backup-notify@%n.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/drdavient/docker
+ExecStart=/home/drdavient/docker/ops/backup/monthly-check.sh

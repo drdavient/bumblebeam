@@ -1,0 +1,100 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+**/secrets.yaml
+**/secrets.yml
+**/auth
+
+# AI agent harness state — private working memory / machine / session.
+# Shared agent config IS committed: .agents/, root AGENTS.md, CLAUDE.md,
+# .claude/settings.json, .claude/skills. See .agents/skills/all-aboard.
+# (.codex/ is git-ignored below.)
+.claude/settings.local.json
+.claude/.credentials.json
+.claude/history.jsonl
+.claude/projects/
+.claude/sessions/
+.claude/shell-snapshots/
+.claude/todos/
+.claude/statsig/
+
+# Databases and generated state
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.journal
+*.pid
+*.lock
+*.state
+*.fastresume
+*.torrent
+
+# Logs, caches, temporary files, and archives
+*.log
+*.log.*
+*.cache
+*.tmp
+*.bak
+*-bak
+*.save
+*.tgz
+*.tar
+*.tar.gz
+*.tar.xz
+*.zip
+__pycache__/
+*.py[cod]
+.cache/
+.codex/
+cache/
+Cache/
+logs/
+Logs/
+archive/
+archives/
+downloads/
+Downloads/
+transcode/
+Transcode/
+thumbnails/
+Thumbnails/
+
+# Service runtime trees (protected by encrypted backup, not Git)
+Home_Media/
+HomeAssistant/hadata/.storage/
+HomeAssistant/hadata/.HA_VERSION
+HomeAssistant/hadata/backups/
+HomeAssistant/hadata/deps/
+HomeAssistant/hadata/tts/
+HomeAssistant/hadata-bak/
+n8n/data/
+plex/PMS/
+plex/PMS-small/
+Home_Media.tgz
+traefik/letsencrypt/
+**/.structurizr/
+
+# Captured HTTP request fragments and editor/OS noise
+traefik/GET
+traefik/Host:
+traefik/accept:
+traefik/user-agent:
+.DS_Store
+Thumbs.db
+*~
+
+# Local backup credentials and scratch data
+.local/
+ops/backup/*.password
+ops/backup/*.password-file
+ops/backup/backup.env
+ops/backup/restore/
+ops/backup/tmp/

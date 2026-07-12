@@ -1,0 +1,12 @@
+[Unit]
+Description=Bumblebeam encrypted Restic backup
+RequiresMountsFor=/mnt/Elements
+OnFailure=bumblebeam-backup-notify@%n.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/drdavient/docker
+ExecStart=/home/drdavient/docker/ops/backup/backup.sh --copy-remote
+ExecStart=/home/drdavient/docker/ops/backup/retention.sh local --apply
+ExecStart=/home/drdavient/docker/ops/backup/retention.sh remote --apply
+ExecStart=/home/drdavient/docker/ops/backup/health-check.sh

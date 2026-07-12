@@ -1,0 +1,8 @@
+# Secrets
+.env
+
+# ACME certificates, private keys and account data
+letsencrypt/acme.json
+
+# Optional runtime files
+*.log

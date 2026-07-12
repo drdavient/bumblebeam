@@ -1,0 +1,14 @@
+[Unit]
+Description=Verify Elements USB disk after host boot
+Requires=docker.service
+After=docker.service local-fs.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/drdavient/docker/mount-watcher
+ExecStart=/usr/bin/docker compose run --rm --no-deps mount-rebooter
+RemainAfterExit=yes
+TimeoutStartSec=3min
+
+[Install]
+WantedBy=multi-user.target

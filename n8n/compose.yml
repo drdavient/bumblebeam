@@ -1,0 +1,61 @@
+services:
+  n8n:
+   # image: n8nio/n8n:latest
+    build: .
+    container_name: n8n
+    restart: unless-stopped
+    networks:
+      - traefik-net
+    environment:
+      - GENERIC_TIMEZONE=Europe/London
+      - EXECUTIONS_PROCESS=main
+
+      - N8N_HOST=n8n.drdavient.com
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.drdavient.com/
+
+      - N8N_COOKIE_SAMESITE=lax
+      - N8N_SECURE_COOKIE=true
+
+      - N8N_EDITOR_BASE_URL=https://n8n.drdavient.com
+      - N8N_PUBLIC_API_BASE_URL=https://n8n.drdavient.com
+    volumes:
+      - ./data:/home/node/.n8n
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+
+      # Service definition
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+
+      # Local (HTTP)
+      - "traefik.http.routers.n8n-local.rule=Host(`n8n`,`n8n.home.arpa`,`n8n.svc.home.arpa`)"
+      - "traefik.http.routers.n8n-local.entrypoints=web"
+      - "traefik.http.routers.n8n-local.service=n8n"
+
+      # Public (HTTP -> HTTPS redirect)
+      - "traefik.http.routers.n8n-public-http.rule=Host(`n8n.drdavient.com`)"
+      - "traefik.http.routers.n8n-public-http.entrypoints=web"
+      - "traefik.http.routers.n8n-public-http.middlewares=n8n-https-redirect"
+      - "traefik.http.routers.n8n-public-http.service=n8n"
+
+      # Redirect middleware (labels, avoids file middleware mistakes)
+      - "traefik.http.middlewares.n8n-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.n8n-https-redirect.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.n8n-forwarded.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.n8n-forwarded.headers.customrequestheaders.X-Forwarded-Port=443"
+      - "traefik.http.routers.n8n-public.middlewares=n8n-forwarded@docker"
+
+
+      # Public (HTTPS)
+      - "traefik.http.routers.n8n-public.rule=Host(`n8n.drdavient.com`)"
+      - "traefik.http.routers.n8n-public.entrypoints=websecure"
+      - "traefik.http.routers.n8n-public.tls=true"
+      - "traefik.http.routers.n8n-public.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.n8n-public.service=n8n"
+
+
+networks:
+  traefik-net:
+    external: true

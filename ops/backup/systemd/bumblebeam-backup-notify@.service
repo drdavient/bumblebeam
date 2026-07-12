@@ -1,0 +1,6 @@
+[Unit]
+Description=Notify that Bumblebeam backup unit %i failed
+
+[Service]
+Type=oneshot
+ExecStart=/home/drdavient/docker/ops/backup/notify-failure.sh %i

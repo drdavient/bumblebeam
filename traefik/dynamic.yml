@@ -1,0 +1,78 @@
+http:
+  routers:
+    hass:
+      rule: "Host(`hass`, `hass.home.arpa`, `hass.svc.home.arpa`)"
+      service: hass
+      entryPoints: ["web"]
+
+    sonarr:
+      rule: "Host(`sonarr`, `sonarr.home.arpa`, `sonarr.svc.home.arpa`)"
+      service: sonarr
+      entryPoints: ["web"]
+
+    radarr:
+      rule: "Host(`radarr`, `radarr.home.arpa`, `radarr.svc.home.arpa`)"
+      service: radarr
+      entryPoints: ["web"]
+
+    plex:
+      rule: "Host(`plex`, `plex.home.arpa`, `plex.svc.home.arpa`)"
+      service: plex
+      entryPoints: ["web"]
+
+    jackett:
+      rule: "Host(`jackett`, `jackett.home.arpa`, `jackett.svc.home.arpa`)"
+      service: jackett
+      entryPoints: ["web"]
+
+    deluge:
+      rule: "Host(`deluge`, `deluge.home.arpa`, `deluge.svc.home.arpa`)"
+      service: deluge
+      entryPoints: ["web"]
+
+    bumblebeam:
+      rule: "Host(`bumblebeam`, `bumblebeam.home.arpa`)"
+      service: bumblebeam
+      entryPoints: ["web"]
+
+    traefik-dashboard:
+      rule: "Host(`traefik`, `traefik.home.arpa`)"
+      service: api@internal
+      entryPoints: ["web"]
+
+  services:
+    hass:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.15:8123"
+
+    sonarr:
+      loadBalancer:
+        servers:
+          - url: "http://gluetun:8989"
+
+    radarr:
+      loadBalancer:
+        servers:
+          - url: "http://gluetun:7878"
+
+    plex:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.15:32400"
+
+    jackett:
+      loadBalancer:
+        servers:
+          - url: "http://gluetun:9117"
+
+    deluge:
+      loadBalancer:
+        servers:
+          - url: "http://gluetun:8112"
+
+    bumblebeam:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.15:8080"
+        passHostHeader: true

@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Bumblebeam backup
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 Europe/London
+Persistent=true
+RandomizedDelaySec=20m
+
+[Install]
+WantedBy=timers.target

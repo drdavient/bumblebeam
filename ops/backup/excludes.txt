@@ -1,0 +1,45 @@
+# Git and developer caches
+**/.git/**
+**/.cache/**
+**/__pycache__/**
+**/*.pyc
+
+# Repository recovery passwords must live outside the repository they unlock
+**/ops/backup/*.password
+**/ops/backup/*.password-file
+
+# Logs, crash data, temporary data, and archives
+**/*.log
+**/*.log.*
+**/*.journal
+**/*.tmp
+**/*.tgz
+**/*.tar
+**/*.tar.gz
+**/*.tar.xz
+**/*.zip
+**/archive/**
+**/archives/**
+
+# Reproducible caches and large generated media metadata
+**/Cache/**
+**/Caches/**
+**/cache/**
+**/Codecs/**
+**/Crash Reports/**
+**/Diagnostics/**
+**/Logs/**
+**/Metadata/**
+**/Media/**
+**/Plug-ins/**
+**/Scanners/**
+**/Updates/**
+**/thumbnails/**
+**/Thumbnails/**
+**/transcode/**
+**/Transcode/**
+
+# Downloads and bulk media never belong in this repository
+**/Downloads/**
+**/downloads/**
+**/*.torrent
