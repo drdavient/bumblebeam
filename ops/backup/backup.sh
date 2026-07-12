@@ -54,7 +54,7 @@ trap on_error ERR
 command -v findmnt >/dev/null || { alert 'findmnt is not installed'; exit 2; }
 
 mount_record=$(findmnt -rn -T "$ELEMENTS_MOUNT" -o UUID,OPTIONS 2>/dev/null \
-  | awk 'NF >= 2 { print; exit }' || true)
+  | awk -v expected_uuid="$ELEMENTS_UUID" '$1 == expected_uuid { print; exit }' || true)
 read -r mount_uuid mount_options <<<"$mount_record"
 if [[ "$mount_uuid" != "$ELEMENTS_UUID" ]]; then
   alert "Elements UUID mismatch or disk absent (expected $ELEMENTS_UUID, got ${mount_uuid:-none})"
@@ -118,6 +118,11 @@ if ((CONSISTENT)); then
 fi
 
 paths=(
+  "$ROOT_DIR/.agents"
+  "$ROOT_DIR/.claude"
+  "$ROOT_DIR/.gitignore"
+  "$ROOT_DIR/AGENTS.md"
+  "$ROOT_DIR/CLAUDE.md"
   "$ROOT_DIR/README.md"
   "$ROOT_DIR/docs"
   "$ROOT_DIR/ops"
@@ -125,6 +130,7 @@ paths=(
   "$ROOT_DIR/n8n"
   "$ROOT_DIR/Home_Media"
   "$ROOT_DIR/traefik"
+  "$ROOT_DIR/portal"
   "$ROOT_DIR/cloudflare-ddns"
   "$ROOT_DIR/mount-watcher"
   "$ROOT_DIR/pla-util"
@@ -134,6 +140,10 @@ paths=(
   "$ROOT_DIR/plex/split_multi.sh"
   "$ROOT_DIR/plex/mergeParts.sh"
 )
+
+# Plex's compose environment contains the runtime token and is intentionally
+# ignored by Git, but it is required for a complete encrypted recovery.
+[[ -e "$ROOT_DIR/plex/.env" ]] && paths+=("$ROOT_DIR/plex/.env")
 
 plex_root="$ROOT_DIR/plex/PMS/Library/Application Support/Plex Media Server"
 for plex_path in \

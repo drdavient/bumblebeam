@@ -60,10 +60,13 @@ cp ops/backup/backup.env.example ops/backup/backup.env
 install -d -m 700 ~/.config/restic
 # Create long random passwords directly in the two files named by backup.env.
 chmod 600 ops/backup/backup.env ~/.config/restic/bumblebeam-*.password
-ops/backup/backup.sh --consistent --check --copy-remote
+ops/backup/backup.sh --consistent --check
 ops/backup/restore-test.sh local
-ops/backup/restore-test.sh remote
 ops/backup/retention.sh local --dry-run
+
+# Run these only after the remote destination has been explicitly authorised.
+ops/backup/backup.sh --consistent --check --copy-remote
+ops/backup/restore-test.sh remote
 ops/backup/retention.sh remote --dry-run
 ```
 

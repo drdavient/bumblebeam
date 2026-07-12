@@ -24,6 +24,8 @@ restic -r "$repo" --password-file "$password_file" restore latest \
   --include "$ROOT_DIR/HomeAssistant/hadata/secrets.yaml" \
   --include "$ROOT_DIR/HomeAssistant/hadata/home-assistant_v2.db" \
   --include "$ROOT_DIR/n8n/data/database.sqlite" \
+  --include "$ROOT_DIR/portal/site/index.html" \
+  --include "$ROOT_DIR/.agents/AGENTS.md" \
   --include "$ROOT_DIR/mount-watcher/mount-rebooter.sh" \
   --include "$ROOT_DIR/plex/PMS/Library/Application Support/Plex Media Server/Preferences.xml" \
   --include "$ROOT_DIR/plex/PMS/Library/Application Support/Plex Media Server/Plug-in Support/Databases/com.plexapp.plugins.library.db" \
@@ -35,6 +37,8 @@ required=(
   "$restored_root/HomeAssistant/hadata/secrets.yaml"
   "$restored_root/HomeAssistant/hadata/home-assistant_v2.db"
   "$restored_root/n8n/data/database.sqlite"
+  "$restored_root/portal/site/index.html"
+  "$restored_root/.agents/AGENTS.md"
   "$restored_root/mount-watcher/mount-rebooter.sh"
   "$restored_root/plex/PMS/Library/Application Support/Plex Media Server/Preferences.xml"
   "$restored_root/plex/PMS/Library/Application Support/Plex Media Server/Plug-in Support/Databases/com.plexapp.plugins.library.db"
