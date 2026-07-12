@@ -27,6 +27,7 @@
   and the retired Elements-hosted page was removed.
 - The narrow UFW rule for `172.22.0.10` on `br-host-svc` restores the Home
   Assistant proxy path; direct and canonical proxy requests both return HTTP 200.
+- Home Assistant UI login through `hass.svc.home.arpa` was manually verified.
 - Host-level `findmnt` confirms `/dev/sdb1` UUID `72908AD6908A9FE9` is mounted
   read-write. The earlier read-only observation was the restricted sandbox bind.
 - Ubuntu Restic 0.12.1 is installed workspace-locally at `.local/usr/bin/restic`.
@@ -60,8 +61,10 @@
 
 ## Blocked or not yet executed
 
-- n8n canonical `n8n.home.arpa` now returns HTTP 200 after recreation.
-- LAN DNS and end-user automation/playback/webhook tests remain unverified.
+- n8n canonical `n8n.svc.home.arpa` now returns HTTP 200 after recreation.
+- No Home Assistant automation is currently configured for an action test. Bluetooth
+  scanner errors and a Living Room TV Chromecast retry are tracked separately.
+- LAN DNS, Plex playback, and n8n webhook tests remain unverified.
 - Plex/Cloudflare token rotation remains deferred because the current checkout
   contains no evidence of external exposure; account-wide Plex reauthentication
   was declined. OneDrive desktop exclusion, account MFA/recovery, and creation of
