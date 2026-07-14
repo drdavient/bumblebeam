@@ -1,1 +1,40 @@
-[]
+- id: pomodoro_focus_fanout
+  alias: Pomodoro focus fan-out
+  description: >-
+    On focus_state change, set Android Do-Not-Disturb (level from the
+    focus_dnd_level input_select) and publish focus/state for the Windows MQTT
+    agent. Actuators fire only on a state change.
+  mode: queued
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.focus_state
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.state in ['on','off'] }}"
+  action:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state == 'on' }}"
+          sequence:
+            - service: notify.mobile_app_samsung_s25_ultra
+              data:
+                message: command_dnd
+                data:
+                  command: "{{ states('input_select.focus_dnd_level') }}"
+            - service: mqtt.publish
+              data:
+                topic: focus/state
+                payload: "on"
+                retain: true
+      default:
+        - service: notify.mobile_app_samsung_s25_ultra
+          data:
+            message: command_dnd
+            data:
+              command: "off"
+        - service: mqtt.publish
+          data:
+            topic: focus/state
+            payload: "off"
+            retain: true

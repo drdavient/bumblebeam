@@ -1,0 +1,35 @@
+# Pomodoro cube -> focus state -> Android DND + Windows agent.
+# Cube-face mapping validated in docs/adr/0006; routine design in docs/adr/0008.
+# Classification uses the dominant gravity axis (see the validated signatures):
+#   +X=25  -X=5  +Y=50  -Y=10  +Z=down  -Z=up
+# Focus is ON while a numbered face (5/10/25/50) is up. The 0.5 s delay_on/off on
+# the binary sensor debounces to the RESTING face, so numbered<->numbered flips
+# (25<->5 work/rest) keep focus ON and only a rest on up/down exits.
+
+mqtt:
+  sensor:
+    - name: "Pomodoro cube face"
+      unique_id: pomodoro_cube_face
+      state_topic: "zigbee2mqtt/pomodoro_cube"
+      icon: mdi:cube-outline
+      value_template: >-
+        {% set x = value_json.x_axis | float(0) %}{% set y = value_json.y_axis | float(0) %}{% set z = value_json.z_axis | float(0) %}{% set ax = x|abs %}{% set ay = y|abs %}{% set az = z|abs %}{{ ('25' if x>0 else '5') if (ax>=ay and ax>=az) else ('50' if y>0 else '10') if (ay>=az) else ('down' if z>0 else 'up') }}
+
+input_select:
+  focus_dnd_level:
+    name: Focus DND level
+    options:
+      - priority_only
+      - alarms_only
+      - total_silence
+    initial: priority_only
+    icon: mdi:bell-off-outline
+
+template:
+  - binary_sensor:
+      - name: "Focus state"
+        unique_id: focus_state
+        icon: mdi:brain
+        state: "{{ states('sensor.pomodoro_cube_face') in ['5','10','25','50'] }}"
+        delay_on: "0:0:0.5"
+        delay_off: "0:0:0.5"
