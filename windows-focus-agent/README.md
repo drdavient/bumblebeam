@@ -13,8 +13,9 @@ whenever it starts or reconnects — no drift after a reboot.
    ```
    pip install -r requirements.txt
    ```
-2. Copy `config.example.ini` to `config.ini` and fill in the **`ultra-magners`
-   MQTT password from Bitwarden**. (Everything else is already correct for Bumblebeam.)
+2. Copy `config.example.ini` to `config.ini` (host/user/topic are already correct
+   for Bumblebeam). Store the **`ultra-magners`** password securely — see
+   *Credentials* below, not in the file.
 3. Test the Windows action without MQTT:
    ```
    python focus_agent.py --test on      # should silence notifications
@@ -25,6 +26,21 @@ whenever it starts or reconnects — no drift after a reboot.
    python focus_agent.py
    ```
    Flip the cube to a numbered face — the agent logs `focus ON` and applies it.
+
+## Credentials
+
+The password is never stored in `config.ini`. Provide it one of these ways (the
+agent checks them in order):
+
+1. **Environment variable** — set `MQTT_PASSWORD` (a user env var, or in the Task
+   Scheduler action's environment).
+2. **Windows Credential Manager** (recommended) — run once:
+   ```
+   python focus_agent.py --set-password
+   ```
+   It prompts and stores the password encrypted (DPAPI, tied to your Windows
+   account) via `keyring`. Nothing touches disk in plaintext.
+3. **Plaintext fallback** — a `password =` value in `config.ini` (discouraged).
 
 ## Autostart
 

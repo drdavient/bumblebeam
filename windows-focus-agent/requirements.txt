@@ -1,1 +1,3 @@
 paho-mqtt>=2.0
+# keyring is only needed for the --set-password (Windows Credential Manager) option
+keyring>=24
