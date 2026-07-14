@@ -2,9 +2,10 @@
 # Cube-face mapping validated in docs/adr/0006; routine design in docs/adr/0008.
 # Classification uses the dominant gravity axis (see the validated signatures):
 #   +X=25  -X=5  +Y=50  -Y=10  +Z=down  -Z=up
-# Focus is ON while a numbered face (5/10/25/50) is up. The 0.5 s delay_on/off on
-# the binary sensor debounces to the RESTING face, so numbered<->numbered flips
-# (25<->5 work/rest) keep focus ON and only a rest on up/down exits.
+# Focus is ON while a numbered face (5/10/25/50) is up. Entering focus is
+# instant; leaving is debounced by delay_off to the RESTING face, so
+# numbered<->numbered flips (25<->5 work/rest) keep focus ON and only a rest
+# on up/down exits.
 
 mqtt:
   sensor:
@@ -31,5 +32,4 @@ template:
         unique_id: focus_state
         icon: mdi:brain
         state: "{{ states('sensor.pomodoro_cube_face') in ['5','10','25','50'] }}"
-        delay_on: "0:0:0.5"
-        delay_off: "0:0:0.5"
+        delay_off: "0:0:0.25"

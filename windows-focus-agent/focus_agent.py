@@ -89,10 +89,10 @@ def _find_dnd_toggle(timeout=5.0):
         send_keys(hotkey)
         try:
             win = desktop.window(title_re=title)
-            win.wait("visible", timeout=timeout)
+            win.wait("visible", timeout=timeout, retry_interval=0.05)
             return win.child_window(
                 title_re="(?i)do not disturb.*", control_type="Button"
-            ).wrapper_object()
+            ).wait("exists", timeout=1, retry_interval=0.05)
         except Exception as e:
             last_err = e
             send_keys("{ESC}")
@@ -132,7 +132,7 @@ def _set_dnd_ui(on: bool):
         if state != on:
             btn.set_focus()
             send_keys("{ENTER}")
-            time.sleep(0.2)
+            time.sleep(0.1)
             end = bool(btn.get_toggle_state())
             if end != on:
                 raise RuntimeError(f"toggled, but DND reads {end} (wanted {on})")
