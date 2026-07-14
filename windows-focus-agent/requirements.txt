@@ -1,3 +1,6 @@
 paho-mqtt>=2.0
 # keyring is only needed for the --set-password (Windows Credential Manager) option
 keyring>=24
+# pywinauto is needed for the default focus method (dnd): it clicks the real
+# Quick Settings Do-Not-Disturb toggle, the only working lever on Win11 2026 builds
+pywinauto>=0.6.8

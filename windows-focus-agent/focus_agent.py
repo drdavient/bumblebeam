@@ -35,7 +35,11 @@ log = logging.getLogger("focus-agent")
 
 # --- Windows focus actuators -------------------------------------------------
 def _set_toasts(enabled: bool):
-    """Default, dependency-free, reliable: toggle Windows toast notifications."""
+    """Legacy: toggle toast notifications via the registry.
+
+    Confirmed ineffective on Windows 11 2026 builds (the platform ignores the
+    value). Kept for older builds only; prefer method=dnd.
+    """
     import winreg
 
     key = r"Software\Microsoft\Windows\CurrentVersion\PushNotifications"
@@ -46,9 +50,9 @@ def _set_toasts(enabled: bool):
 def _set_focus_assist(level: int):
     """Experimental: toggle Focus Assist / Do-Not-Disturb via WNF.
 
-    level: 0=Off, 1=Priority only, 2=Alarms only. Undocumented and may be
-    build-specific; if the DND moon icon does not change, switch method to
-    `toasts` or `command` in config.ini.
+    level: 0=Off, 1=Priority only, 2=Alarms only. Confirmed dead on Windows 11
+    2026 builds (STATUS_OBJECT_NAME_NOT_FOUND — the WNF state was removed).
+    Kept for older builds only; prefer method=dnd.
     """
     import ctypes
 
@@ -62,11 +66,72 @@ def _set_focus_assist(level: int):
         raise OSError(f"NtUpdateWnfStateData returned {status:#x}")
 
 
+def _find_dnd_toggle(timeout=5.0):
+    """Open Quick Settings (Win+A) and return the 'Do not disturb' toggle button.
+
+    The caller is responsible for closing the flyout (Esc) afterwards.
+    """
+    from pywinauto import Desktop
+    from pywinauto.keyboard import send_keys
+
+    send_keys("{VK_LWIN down}a{VK_LWIN up}")
+    qs = Desktop(backend="uia").window(title_re="(?i)quick settings")
+    qs.wait("visible", timeout=timeout)
+    return qs.child_window(
+        title_re="(?i)do not disturb.*", control_type="Button"
+    ).wrapper_object()
+
+
+def _set_dnd_ui(on: bool):
+    """Toggle Do Not Disturb by clicking the real Quick Settings toggle.
+
+    Windows 11 2026 builds keep the live DND state in shell memory only: the
+    legacy toasts registry value is ignored, the old Focus Assist WNF state no
+    longer exists, and the CloudStore registry blob is a lazily-flushed cache
+    (writing it changes nothing). Driving the actual UI toggle is the one lever
+    that is guaranteed to track what the user sees. Requires pywinauto.
+    """
+    from pywinauto.keyboard import send_keys
+
+    try:
+        btn = _find_dnd_toggle()
+        state = btn.get_toggle_state()  # 0 = off, 1 = on
+        if bool(state) != on:
+            btn.click_input()
+            end = bool(btn.get_toggle_state())
+            if end != on:
+                raise RuntimeError(f"clicked, but DND reads {end} (wanted {on})")
+        else:
+            log.info("DND already %s", "on" if on else "off")
+    finally:
+        send_keys("{ESC}")
+
+
+def dump_quick_settings():
+    """Debug helper: print the Quick Settings control tree (for --dump-qs).
+
+    If the DND toggle isn't found (different Windows language/build), run this
+    and use the real window/button names to fix the title_re patterns above.
+    """
+    from pywinauto import Desktop
+    from pywinauto.keyboard import send_keys
+
+    send_keys("{VK_LWIN down}a{VK_LWIN up}")
+    try:
+        qs = Desktop(backend="uia").window(title_re="(?i)quick settings")
+        qs.wait("visible", timeout=5)
+        qs.print_control_identifiers(depth=6)
+    finally:
+        send_keys("{ESC}")
+
+
 def apply_focus(on: bool, cfg):
-    method = cfg.get("focus", "method", fallback="toasts").strip()
+    method = cfg.get("focus", "method", fallback="dnd").strip()
     log.info("focus %s (method=%s)", "ON" if on else "OFF", method)
     try:
-        if method == "toasts":
+        if method == "dnd":
+            _set_dnd_ui(on)
+        elif method == "toasts":
             _set_toasts(enabled=not on)  # focus ON => toasts OFF
         elif method == "focus_assist":
             level = cfg.getint("focus", "assist_level", fallback=1)
@@ -129,9 +194,13 @@ def main():
     ap.add_argument("--config", default=os.path.join(HERE, "config.ini"))
     ap.add_argument("--test", choices=["on", "off"], help="apply focus once and exit")
     ap.add_argument("--set-password", action="store_true", help="store the MQTT password in the vault and exit")
+    ap.add_argument("--dump-qs", action="store_true", help="print the Quick Settings control tree and exit (debug)")
     args = ap.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    if args.dump_qs:
+        dump_quick_settings()
+        return
     cfg = configparser.ConfigParser()
     if not cfg.read(args.config):
         sys.exit(f"config not found: {args.config} (copy config.example.ini to config.ini)")

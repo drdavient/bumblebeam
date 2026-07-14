@@ -51,12 +51,20 @@ For robustness, use Task Scheduler → "At log on" → run
 
 ## Focus methods (`[focus] method =` in config.ini)
 
-- **`toasts`** (default) — toggles Windows toast notifications via the registry.
-  Dependency-free and reliable; suppresses notification popups while focused.
-- **`focus_assist`** — experimental: toggles Focus Assist / Do-Not-Disturb (the
-  moon icon) via an undocumented call. If the DND state doesn't visibly change on
-  your Windows build, use `toasts` or `command` instead. `assist_level` sets the
-  ON level (1 = Priority only, 2 = Alarms only).
+- **`dnd`** (default) — clicks the real **Do not disturb** toggle in Quick
+  Settings (Win+A) via UI Automation (`pywinauto`). On Windows 11 2026 builds
+  this is the *only* working lever: the live DND state exists solely in shell
+  memory — the legacy toasts registry value is ignored, the old Focus Assist
+  WNF state was removed, and the CloudStore registry blob is a lazily-flushed
+  cache (confirmed empirically: registry dumps taken with DND off and on are
+  byte-identical). The flyout opens and closes in well under a second; it reads
+  the toggle state first, so it never flips the wrong way, and it verifies the
+  state after clicking. Needs an unlocked, interactive desktop session.
+  If the toggle isn't found (non-English Windows renames the button), run
+  `python focus_agent.py --dump-qs` and adjust the `title_re` patterns.
+- **`toasts`** / **`focus_assist`** — legacy levers for older Windows builds.
+  Both are confirmed dead on 2026 builds; kept only in case the agent is reused
+  on an older machine.
 - **`command`** — runs your own `on_command` / `off_command` (e.g. a PowerShell
   or AutoHotkey script) on each transition. The most flexible escape hatch.
 
@@ -67,14 +75,11 @@ toast script:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # baseline: should pop up
-python focus_agent.py --test on                              # method=focus_assist
+python focus_agent.py --test on
 powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # should be SUPPRESSED
 python focus_agent.py --test off
 powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # pops up again
 ```
-
-If the toast still pops up with `--test on`, the `focus_assist` call isn't taking
-on this build — switch to `method = command` and drive DND another way.
 
 ## How it fits
 

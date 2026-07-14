@@ -39,10 +39,10 @@ cube -> Zigbee2MQTT -> Mosquitto -> Home Assistant (classify + debounce)
   (ACL read-only on `focus/#`); LAN-exposed on `1883` for the Windows agent;
   persistence on so retained `focus/state` survives restarts.
 - **Windows agent** (`windows-focus-agent/`): a paho-mqtt client that subscribes to
-  `focus/state` and applies a Windows action. Methods: `toasts` (default, reliable
-  notification suppression), `focus_assist` (experimental DND toggle), or `command`
-  (run a user script). Outbound-only; auto-reconnects; self-syncs on the retained
-  message.
+  `focus/state` and applies a Windows action. Default method `dnd` drives the real
+  Quick Settings Do-Not-Disturb toggle via UI Automation (pywinauto); `toasts` and
+  `focus_assist` are legacy levers for older builds; `command` runs a user script.
+  Outbound-only; auto-reconnects; self-syncs on the retained message.
 
 ## Status
 
@@ -51,6 +51,14 @@ cube -> Zigbee2MQTT -> Mosquitto -> Home Assistant (classify + debounce)
   and the 0.5 s debounce held (no spurious toggles).
 - Broker LAN exposure + ACL + persistence verified. Windows agent delivered;
   pending first on-device run.
+- **Windows DND lever reverse-engineered** 2026-07-14 on Ultra-Magners
+  (Windows 11 2026 build): the legacy toasts registry value is ignored, the
+  Focus Assist WNF state was removed (`STATUS_OBJECT_NAME_NOT_FOUND`), and
+  registry dumps taken with DND off vs on are byte-identical — the CloudStore
+  `quiethourssettings` blob is a lazily-flushed cache and the live state exists
+  only in shell memory. No registry or documented API lever exists on this
+  build, so the agent's default `dnd` method clicks the actual Quick Settings
+  toggle via UI Automation (state-checked before and verified after each click).
 
 ## Consequences
 
@@ -59,8 +67,10 @@ cube -> Zigbee2MQTT -> Mosquitto -> Home Assistant (classify + debounce)
   and credentials live in Bitwarden (never in Git; `passwd` and the agent
   `config.ini` are ignored).
 - Startup default is focus OFF (safe). The automation also clears DND on HA start.
-- The Windows DND mechanism is the one part not testable from Bumblebeam, so the
-  agent defaults to the reliable `toasts` method and offers a `command` escape
-  hatch for per-build tuning.
+- The Windows DND mechanism is not testable from Bumblebeam and Microsoft keeps
+  no stable programmatic interface for it, so the default `dnd` method automates
+  the UI itself — deliberately coupled to what the user sees rather than to
+  undocumented internals that each build breaks. It needs an unlocked interactive
+  session; `command` remains the escape hatch.
 - `zigbee/zigbee2mqtt/data/` (network key, coordinator backup) must be in the
   encrypted backup scope — see the task register.

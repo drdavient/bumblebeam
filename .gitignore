@@ -86,6 +86,8 @@ zigbee/zigbee2mqtt/data/
 zigbee/mosquitto/config/passwd
 # Windows focus agent local config holds the broker password (in Bitwarden).
 windows-focus-agent/config.ini
+# discover-dnd.ps1 output: machine-specific registry dumps, diagnostic only
+windows-focus-agent/dnd-*.txt
 plex/PMS/
 plex/PMS-small/
 Home_Media.tgz
