@@ -42,7 +42,7 @@ on one daemon — which is *why* deploys are serial):
 
 - **Every service (and sub-service) pins an explicit `container_name`** (`portal`,
   `traefik`, `homeassistant`, `plex`, `gluetun`, `n8n`, `deluge`, `radarr`, `sonarr`,
-  `prowlarr`, `jackett`, `flaresolverr`, `structurizr-lite`, `mount-rebooter`,
+  `prowlarr`, `flaresolverr`, `structurizr-lite`, `mount-rebooter`,
   `elements-waiter`, `mount-waiter`, `cloudflare-ddns`). This is a **passive backstop,
   not a safety boundary**: a stray `docker compose up` from a worktree can't spawn a
   clean parallel *duplicate* stack, but it may still conflict with, disrupt, or
@@ -50,7 +50,7 @@ on one daemon — which is *why* deploys are serial):
   authority (see enforcement layers below).
 - **Fixed host ports**: `80/443` (`traefik/`), `8181` (`structurizr-lite/`), `8123`
   (`HomeAssistant/`), and the media set published on **gluetun** —
-  `8888/8989/9117/7878/8112/8191/9696`. Because the `*arr`/deluge apps run
+  `8888/8989/7878/8112/8191/9696`. Because the `*arr`/deluge apps run
   `network_mode: container:gluetun`, their ports live on gluetun, so cycling gluetun
   cycles them all. Plus `network_mode: host` (`HomeAssistant/`, `plex/`).
 - **Networks are owned by exactly one Compose stack** (not standalone-provisioned);

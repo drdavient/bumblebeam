@@ -8,7 +8,7 @@
 | HA SQLite/WAL and `.storage` | Stateful application data | No | Yes | Consistent snapshot preferred |
 | n8n SQLite/config | Stateful application data | No | Yes | Consistent snapshot preferred |
 | Plex databases and `Preferences.xml` | Stateful application data | No | Yes | Metadata/art/cache are excluded |
-| Radarr/Sonarr/Prowlarr/Jackett/Deluge/Gluetun config | Stateful application data | No | Yes | Logs, archives, cache excluded |
+| Radarr/Sonarr/Prowlarr/Deluge/Gluetun config | Stateful application data | No | Yes | Logs, archives, cache excluded |
 | Traefik `acme.json` | Certificate/account state | No | Yes | Must remain mode 600 |
 | Logs, caches, thumbnails, transcodes, archives | Excluded/reproducible | No | No | Regenerated or low recovery value |
 | Downloads and `/mnt/Elements/Video`, Music | Bulk media | No | No | Separate accepted risk/workstream |

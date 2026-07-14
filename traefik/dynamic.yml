@@ -20,11 +20,6 @@ http:
       service: plex
       entryPoints: ["web"]
 
-    jackett:
-      rule: "Host(`jackett`, `jackett.home.arpa`, `jackett.svc.home.arpa`)"
-      service: jackett
-      entryPoints: ["web"]
-
     deluge:
       rule: "Host(`deluge`, `deluge.home.arpa`, `deluge.svc.home.arpa`)"
       service: deluge
@@ -60,11 +55,6 @@ http:
       loadBalancer:
         servers:
           - url: "http://192.168.1.15:32400"
-
-    jackett:
-      loadBalancer:
-        servers:
-          - url: "http://gluetun:9117"
 
     deluge:
       loadBalancer:

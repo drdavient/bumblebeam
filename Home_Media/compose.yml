@@ -11,7 +11,6 @@ services:
     ports:
       - 8888:8888/tcp          # Built-in HTTP control server
       - 8989:8989              # Sonarr HTTP proxy
-      - 9117:9117              # Jackett
       - 7878:7878              # Radarr
       - 8112:8112              # Deluge web interface
       - 8191:8191              # FlareSolverr
@@ -59,26 +58,6 @@ services:
       - ./radarr-config:/config
       - /mnt/Elements/Video/Movies:/movies
       - /mnt/Elements/Downloads/Transmission/:/downloads
-    depends_on:
-      vpn:
-        condition: service_started
-      elements-waiter:
-        condition: service_healthy
-    network_mode: "container:gluetun"
-    restart: unless-stopped
-
-  jackett:
-    image: ghcr.io/linuxserver/jackett
-    container_name: jackett
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - AUTO_UPDATE=true #optional
-      - RUN_OPTS=<run options here> #optional
-    volumes:
-      - ./jackett-config:/config
-      - /mnt/Elements/Downloads/Transmission/blackhole:/downloads
     depends_on:
       vpn:
         condition: service_started

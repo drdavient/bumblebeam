@@ -24,7 +24,6 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
                 radarr = container "Radarr" "Movie library automation; shares Gluetun's network namespace." "VPN-only"
                 prowlarr = container "Prowlarr" "Indexer manager; shares Gluetun's network namespace." "VPN-only"
                 deluge = container "Deluge" "Torrent client; shares Gluetun's network namespace." "VPN-only"
-                jackett = container "Jackett" "Legacy indexer service; shares Gluetun's network namespace." "VPN-only"
                 flareSolverr = container "FlareSolverr" "Browser-based challenge helper; shares Gluetun's network namespace." "VPN-only"
             }
         }
@@ -46,7 +45,6 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
         bumblebeam.radarr -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.prowlarr -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.deluge -> bumblebeam.gluetun "Shares network namespace with"
-        bumblebeam.jackett -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.flareSolverr -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.radarr -> bumblebeam.prowlarr "Uses indexers from" "HTTP"
         bumblebeam.sonarr -> bumblebeam.prowlarr "Uses indexers from" "HTTP"

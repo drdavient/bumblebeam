@@ -93,7 +93,7 @@ if [[ ! -f "$LOCAL_REPOSITORY/config" ]]; then
 fi
 
 running_containers=()
-stateful_containers=(deluge radarr sonarr prowlarr jackett n8n homeassistant plex traefik)
+stateful_containers=(deluge radarr sonarr prowlarr n8n homeassistant plex traefik)
 restart_containers() {
   if ((${#running_containers[@]})); then
     log "restarting previously running containers: ${running_containers[*]}"
