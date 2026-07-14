@@ -10,6 +10,9 @@ frontend:
 mqtt:
   base_topic: zigbee2mqtt
   server: mqtt://mosquitto:1883
+  user: z2m
+  # password: <set in the Git-ignored data/configuration.yaml; also stored in Bitwarden>
+  # Broker users are created with mosquitto_passwd into zigbee/mosquitto/config/passwd.
 serial:
   port: /dev/ttyUSB0
   adapter: ember        # SONOFF ZBDongle-E = EFR32MG21 (EmberZNet NCP)

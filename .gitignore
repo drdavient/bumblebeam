@@ -81,6 +81,7 @@ n8n/data/
 # Zigbee2MQTT runtime/state: the live configuration.yaml holds the generated
 # network_key and pan_id; database.db/state.json/coordinator_backup are runtime.
 zigbee/zigbee2mqtt/data/
+zigbee/mosquitto/config/passwd
 plex/PMS/
 plex/PMS-small/
 Home_Media.tgz
