@@ -44,10 +44,21 @@ agent checks them in order):
 
 ## Autostart
 
-Simplest: press `Win+R`, run `shell:startup`, and drop a shortcut to
-`pythonw focus_agent.py` there (use `pythonw` so no console window appears).
-For robustness, use Task Scheduler → "At log on" → run
-`pythonw <path>\focus_agent.py`.
+Run once from this folder:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-autostart.ps1
+```
+
+This registers a Scheduled Task ("Pomodoro focus agent") that starts
+`pythonw focus_agent.py` in the background at every logon and restarts it if
+it dies. It runs **only while you're logged on** — required, because the `dnd`
+method drives the interactive desktop and the keyring credential is tied to
+your account. Remove with `-Uninstall`.
+
+Note: DND can't be toggled while the PC is locked (there's no desktop to
+drive). A transition missed while locked is applied on the next cube flip or
+agent reconnect.
 
 ## Focus methods (`[focus] method =` in config.ini)
 
