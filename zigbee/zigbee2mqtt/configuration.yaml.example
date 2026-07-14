@@ -1,0 +1,17 @@
+# Template for zigbee2mqtt/data/configuration.yaml (the live file is Git-ignored
+# because Z2M writes runtime secrets into it — the generated Zigbee network_key,
+# pan_id, and coordinator backup). Copy this to data/configuration.yaml on a new
+# host; Z2M fills in the rest on first start.
+homeassistant:
+  enabled: false        # validation phase only; enable when wiring HA later
+frontend:
+  enabled: true
+  port: 8080
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://mosquitto:1883
+serial:
+  port: /dev/ttyUSB0
+  adapter: ember        # SONOFF ZBDongle-E = EFR32MG21 (EmberZNet NCP)
+advanced:
+  log_level: info
