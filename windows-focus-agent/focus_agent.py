@@ -306,8 +306,14 @@ def main():
     client.on_message = on_message
     host, port = cfg.get("mqtt", "host"), cfg.getint("mqtt", "port", fallback=1883)
     log.info("connecting to %s:%s", host, port)
-    client.connect(host, port, keepalive=60)
-    client.loop_forever(retry_first_connection=True)  # auto-reconnects forever
+    # connect_async + retry_first_connection: keep retrying even if the broker
+    # is unreachable at startup (e.g. agent autostarts before the network is up).
+    client.connect_async(host, port, keepalive=60)
+    try:
+        client.loop_forever(retry_first_connection=True)  # auto-reconnects forever
+    except KeyboardInterrupt:
+        log.info("interrupted; disconnecting")
+        client.disconnect()
 
 
 if __name__ == "__main__":
