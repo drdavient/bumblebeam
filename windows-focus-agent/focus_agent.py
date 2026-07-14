@@ -66,20 +66,40 @@ def _set_focus_assist(level: int):
         raise OSError(f"NtUpdateWnfStateData returned {status:#x}")
 
 
+# The DND toggle moved between flyouts across Win11 builds: newer builds keep it
+# at the top of the Notification Center (Win+N); older ones in Quick Settings
+# (Win+A). Try both. "cent" matches Center/Centre localisations.
+_DND_FLYOUTS = (
+    ("{VK_LWIN down}n{VK_LWIN up}", "(?i)notification cent"),
+    ("{VK_LWIN down}a{VK_LWIN up}", "(?i)quick settings"),
+)
+
+
 def _find_dnd_toggle(timeout=5.0):
-    """Open Quick Settings (Win+A) and return the 'Do not disturb' toggle button.
+    """Open the flyout holding the 'Do not disturb' toggle and return the button.
 
     The caller is responsible for closing the flyout (Esc) afterwards.
     """
     from pywinauto import Desktop
     from pywinauto.keyboard import send_keys
 
-    send_keys("{VK_LWIN down}a{VK_LWIN up}")
-    qs = Desktop(backend="uia").window(title_re="(?i)quick settings")
-    qs.wait("visible", timeout=timeout)
-    return qs.child_window(
-        title_re="(?i)do not disturb.*", control_type="Button"
-    ).wrapper_object()
+    desktop = Desktop(backend="uia")
+    last_err = None
+    for hotkey, title in _DND_FLYOUTS:
+        send_keys(hotkey)
+        try:
+            win = desktop.window(title_re=title)
+            win.wait("visible", timeout=timeout)
+            return win.child_window(
+                title_re="(?i)do not disturb.*", control_type="Button"
+            ).wrapper_object()
+        except Exception as e:
+            last_err = e
+            send_keys("{ESC}")
+    raise RuntimeError(
+        f"DND toggle not found in Notification Center or Quick Settings "
+        f"(run --dump-qs and report the tree): {last_err}"
+    )
 
 
 def _set_dnd_ui(on: bool):
@@ -108,21 +128,26 @@ def _set_dnd_ui(on: bool):
 
 
 def dump_quick_settings():
-    """Debug helper: print the Quick Settings control tree (for --dump-qs).
+    """Debug helper: print both flyouts' control trees (for --dump-qs).
 
     If the DND toggle isn't found (different Windows language/build), run this
-    and use the real window/button names to fix the title_re patterns above.
+    and use the real window/button names to fix the patterns in _DND_FLYOUTS.
     """
     from pywinauto import Desktop
     from pywinauto.keyboard import send_keys
 
-    send_keys("{VK_LWIN down}a{VK_LWIN up}")
-    try:
-        qs = Desktop(backend="uia").window(title_re="(?i)quick settings")
-        qs.wait("visible", timeout=5)
-        qs.print_control_identifiers(depth=6)
-    finally:
-        send_keys("{ESC}")
+    desktop = Desktop(backend="uia")
+    for hotkey, title in _DND_FLYOUTS:
+        print(f"\n===== flyout {title!r} =====")
+        send_keys(hotkey)
+        try:
+            win = desktop.window(title_re=title)
+            win.wait("visible", timeout=5)
+            win.print_control_identifiers(depth=6)
+        except Exception as e:
+            print(f"(not found: {e})")
+        finally:
+            send_keys("{ESC}")
 
 
 def apply_focus(on: bool, cfg):
