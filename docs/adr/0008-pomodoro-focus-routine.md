@@ -49,8 +49,15 @@ cube -> Zigbee2MQTT -> Mosquitto -> Home Assistant (classify + debounce)
 - **Android path verified end-to-end** 2026-07-14: flipping between numbered and
   up faces drove `focus/state` off<->on tracking the cube, the phone DND followed,
   and the 0.5 s debounce held (no spurious toggles).
-- Broker LAN exposure + ACL + persistence verified. Windows agent delivered;
-  pending first on-device run.
+- Broker LAN exposure + ACL + persistence verified.
+- **Windows path verified end-to-end** 2026-07-14 on Ultra-Magners: cube flips
+  drive Windows DND over MQTT via the `dnd` method. Latency tuned the same day:
+  the HA `delay_on`/`delay_off` debounce was removed (the DJT11LM firmware only
+  reports settled orientations, so it duplicated the sensor's own settle), and
+  the agent reads UIA's focused element (Win+N focuses the toggle) instead of
+  regex-searching the flyout tree (~3 s). Repeated states are deduped against
+  the last successfully applied state — retained-message replays (HA restart,
+  broker reconnect) are expected and must be idempotent. **Routine complete.**
 - **Windows DND lever reverse-engineered** 2026-07-14 on Ultra-Magners
   (Windows 11 2026 build): the legacy toasts registry value is ignored, the
   Focus Assist WNF state was removed (`STATUS_OBJECT_NAME_NOT_FOUND`), and
