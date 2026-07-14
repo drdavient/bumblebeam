@@ -51,17 +51,19 @@ For robustness, use Task Scheduler → "At log on" → run
 
 ## Focus methods (`[focus] method =` in config.ini)
 
-- **`dnd`** (default) — clicks the real **Do not disturb** toggle in Quick
-  Settings (Win+A) via UI Automation (`pywinauto`). On Windows 11 2026 builds
-  this is the *only* working lever: the live DND state exists solely in shell
-  memory — the legacy toasts registry value is ignored, the old Focus Assist
-  WNF state was removed, and the CloudStore registry blob is a lazily-flushed
-  cache (confirmed empirically: registry dumps taken with DND off and on are
-  byte-identical). The flyout opens and closes in well under a second; it reads
-  the toggle state first, so it never flips the wrong way, and it verifies the
-  state after clicking. Needs an unlocked, interactive desktop session.
-  If the toggle isn't found (non-English Windows renames the button), run
-  `python focus_agent.py --dump-qs` and adjust the `title_re` patterns.
+- **`dnd`** (default) — drives the real **Do not disturb** toggle: Win+N opens
+  the Notification Center with focus on the toggle, Enter activates it, Esc
+  closes the flyout. On Windows 11 2026 builds this is the *only* working
+  lever: the live DND state exists solely in shell memory — the legacy toasts
+  registry value is ignored, the old Focus Assist WNF state was removed, and
+  the CloudStore registry blob is a lazily-flushed cache (confirmed
+  empirically: registry dumps taken with DND off and on are byte-identical).
+  UI Automation (`pywinauto`) reads the toggle state before activating, so a
+  retained-message replay can never invert a manually-set DND state, and the
+  result is verified afterwards. Needs an unlocked, interactive desktop
+  session. If the toggle isn't found (non-English Windows renames the button),
+  run `python focus_agent.py --dump-qs` and adjust the patterns in
+  `_DND_FLYOUTS`.
 - **`toasts`** / **`focus_assist`** — legacy levers for older Windows builds.
   Both are confirmed dead on 2026 builds; kept only in case the agent is reused
   on an older machine.
