@@ -5,10 +5,11 @@ services:
     restart: unless-stopped
     volumes:
       - ./mosquitto/config:/mosquitto/config:ro
+      - mosquitto-data:/mosquitto/data
     ports:
-      # Local only: Home Assistant (host-networked) reaches the broker on the host
-      # loopback. Z2M reaches it over the internal zigbee-net. Not exposed to the LAN.
-      - "127.0.0.1:1883:1883"
+      # Authenticated + ACL-restricted, so exposed on the LAN for the Windows focus
+      # agent. HA reaches it on loopback; Z2M over the internal zigbee-net.
+      - "1883:1883"
     networks:
       - zigbee-net
 
@@ -42,3 +43,8 @@ networks:
     driver: bridge
   traefik-net:
     external: true
+
+volumes:
+  # Persist retained MQTT messages (e.g. focus/state) across broker restarts, so
+  # the Windows agent self-syncs on connect.
+  mosquitto-data:

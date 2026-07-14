@@ -1,0 +1,14 @@
+# Mosquitto ACL (usernames only — no secrets; passwords live in ./passwd).
+# Least privilege now that the broker is exposed on the LAN.
+
+# Zigbee2MQTT: its own tree only.
+user z2m
+topic readwrite zigbee2mqtt/#
+
+# Home Assistant: the automation hub — full broker access.
+user hass
+topic readwrite #
+
+# Windows focus agent: read-only on the focus topic, nothing else.
+user windows
+topic read focus/#

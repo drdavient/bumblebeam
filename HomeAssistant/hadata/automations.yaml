@@ -1,21 +1,25 @@
 - id: pomodoro_focus_fanout
   alias: Pomodoro focus fan-out
   description: >-
-    On focus_state change, set Android Do-Not-Disturb (level from the
-    focus_dnd_level input_select) and publish focus/state for the Windows MQTT
-    agent. Actuators fire only on a state change.
+    Mirror focus_state to Android DND (level from focus_dnd_level) and a retained
+    focus/state topic for the Windows agent. Fires on focus_state change and on HA
+    start, so the retained topic is always populated (self-sync after any restart).
   mode: queued
   trigger:
     - platform: state
       entity_id: binary_sensor.focus_state
+    - platform: homeassistant
+      event: start
+  variables:
+    focus: "{{ states('binary_sensor.focus_state') }}"
   condition:
     - condition: template
-      value_template: "{{ trigger.to_state.state in ['on','off'] }}"
+      value_template: "{{ focus in ['on', 'off'] }}"
   action:
     - choose:
         - conditions:
             - condition: template
-              value_template: "{{ trigger.to_state.state == 'on' }}"
+              value_template: "{{ focus == 'on' }}"
           sequence:
             - service: notify.mobile_app_samsung_s25_ultra
               data:
