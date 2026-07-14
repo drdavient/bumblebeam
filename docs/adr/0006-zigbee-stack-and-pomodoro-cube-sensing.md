@@ -15,8 +15,8 @@ infer timer state and (a later phase) drive a Windows focus mode.
 
 The DJT11LM paired and is fully supported (`lumi.vibration.aq1`), exposing raw
 orientation telemetry: `angle_x/y/z`, `x_axis/y_axis/z_axis`, `action`, `strength`,
-`vibration`, plus diagnostics. On 2026-07-14 the six cube faces were exercised (five
-labelled, the sixth predicted):
+`vibration`, plus diagnostics. On 2026-07-14 all six cube faces were exercised and
+confirmed:
 
 | Face | Raw axis (x, y, z) | Dominant | Angle |
 |---|---|---|---|
@@ -25,7 +25,7 @@ labelled, the sixth predicted):
 | 50 | (16, 1039, 237) | +Y | `angle_y ≈ +77` |
 | 5 | (−930, 23, 228) | −X | `angle_x ≈ −76` |
 | face down | (48, −4, 1227) | +Z | `angle_z ≈ +88` |
-| (untested) | (~0, −1000, ~0) predicted | −Y | `angle_y ≈ −78` |
+| 10 | (75, −1026, 244) | −Y | `angle_y ≈ −76` |
 
 Findings: readings are **stable and repeatable** across taps (the reported DJT11LM
 staleness did not manifest); faces separate by ~±1000 on the gravity axis vs ~tens
