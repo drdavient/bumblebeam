@@ -60,6 +60,22 @@ For robustness, use Task Scheduler → "At log on" → run
 - **`command`** — runs your own `on_command` / `off_command` (e.g. a PowerShell
   or AutoHotkey script) on each transition. The most flexible escape hatch.
 
+## Verifying Do Not Disturb
+
+The moon icon can be ambiguous, so verify DND *functionally* with the included
+toast script:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # baseline: should pop up
+python focus_agent.py --test on                              # method=focus_assist
+powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # should be SUPPRESSED
+python focus_agent.py --test off
+powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # pops up again
+```
+
+If the toast still pops up with `--test on`, the `focus_assist` call isn't taking
+on this build — switch to `method = command` and drive DND another way.
+
 ## How it fits
 
 ```
