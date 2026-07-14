@@ -35,7 +35,7 @@ cube -> Zigbee2MQTT -> Mosquitto -> Home Assistant (classify + debounce)
 - **HA package** `HomeAssistant/hadata/packages/pomodoro_focus.yaml` (MQTT sensor
   classifier, `input_select.focus_dnd_level`, `binary_sensor.focus_state`) plus the
   `pomodoro_focus_fanout` automation in `automations.yaml`.
-- **Broker** (`zigbee/`): Mosquitto authenticated; a least-privilege `windows` user
+- **Broker** (`zigbee/`): Mosquitto authenticated; a least-privilege `ultra-magners` user
   (ACL read-only on `focus/#`); LAN-exposed on `1883` for the Windows agent;
   persistence on so retained `focus/state` survives restarts.
 - **Windows agent** (`windows-focus-agent/`): a paho-mqtt client that subscribes to
@@ -55,7 +55,7 @@ cube -> Zigbee2MQTT -> Mosquitto -> Home Assistant (classify + debounce)
 ## Consequences
 
 - The MQTT broker is now reachable on the LAN. This is acceptable because it is
-  authenticated, the `windows` user is ACL-limited to read-only non-sensitive data,
+  authenticated, the `ultra-magners` user is ACL-limited to read-only non-sensitive data,
   and credentials live in Bitwarden (never in Git; `passwd` and the agent
   `config.ini` are ignored).
 - Startup default is focus OFF (safe). The automation also clears DND on HA start.

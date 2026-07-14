@@ -9,6 +9,6 @@ topic readwrite zigbee2mqtt/#
 user hass
 topic readwrite #
 
-# Windows focus agent: read-only on the focus topic, nothing else.
-user windows
+# Ultra-Magners (Windows PC) focus agent: read-only on the focus topic, nothing else.
+user ultra-magners
 topic read focus/#

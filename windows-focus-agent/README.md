@@ -13,8 +13,8 @@ whenever it starts or reconnects — no drift after a reboot.
    ```
    pip install -r requirements.txt
    ```
-2. Copy `config.example.ini` to `config.ini` and fill in the **`windows` MQTT
-   password from Bitwarden**. (Everything else is already correct for Bumblebeam.)
+2. Copy `config.example.ini` to `config.ini` and fill in the **`ultra-magners`
+   MQTT password from Bitwarden**. (Everything else is already correct for Bumblebeam.)
 3. Test the Windows action without MQTT:
    ```
    python focus_agent.py --test on      # should silence notifications
@@ -50,7 +50,7 @@ For robustness, use Task Scheduler → "At log on" → run
 Aqara cube -> Zigbee2MQTT -> Mosquitto (192.168.1.15:1883)
                                  ^
 Home Assistant classifies face, debounces to the resting face, and publishes
-retained focus/state on|off  ---->  this agent (read-only 'windows' MQTT user)
+retained focus/state on|off  ---->  this agent (read-only 'ultra-magners' MQTT user)
 ```
 
 Nothing listens on the PC; the agent dials out to the broker and auto-reconnects.
