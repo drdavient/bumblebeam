@@ -200,6 +200,7 @@ def dump_quick_settings():
 
 
 def apply_focus(on: bool, cfg):
+    """Apply the focus state; returns True if it was applied successfully."""
     method = cfg.get("focus", "method", fallback="dnd").strip()
     log.info("focus %s (method=%s)", "ON" if on else "OFF", method)
     try:
@@ -216,8 +217,11 @@ def apply_focus(on: bool, cfg):
                 subprocess.run(cmd, shell=True, check=False)
         else:
             log.error("unknown focus method: %s", method)
+            return False
+        return True
     except Exception as e:  # never let an actuator error kill the agent
         log.error("failed to apply focus: %s", e)
+        return False
 
 
 # --- Credentials -------------------------------------------------------------
@@ -259,8 +263,17 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
 def on_message(client, userdata, msg):
     payload = msg.payload.decode(errors="ignore").strip().lower()
     log.info("recv %s = %r", msg.topic, payload)
-    if payload in ("on", "off"):
-        apply_focus(payload == "on", userdata["cfg"])
+    if payload not in ("on", "off"):
+        return
+    on = payload == "on"
+    # Repeats are normal (HA republishes the retained state on restart; the
+    # broker redelivers it on every reconnect). If we already applied this
+    # state successfully, trust that rather than reopening the flyout.
+    if userdata.get("last_applied") == on:
+        log.info("focus already %s; skipping", payload)
+        return
+    if apply_focus(on, userdata["cfg"]):
+        userdata["last_applied"] = on
 
 
 def main():
