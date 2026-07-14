@@ -103,24 +103,39 @@ def _find_dnd_toggle(timeout=5.0):
 
 
 def _set_dnd_ui(on: bool):
-    """Toggle Do Not Disturb by clicking the real Quick Settings toggle.
+    """Toggle Do Not Disturb via the real Notification Center toggle.
 
     Windows 11 2026 builds keep the live DND state in shell memory only: the
     legacy toasts registry value is ignored, the old Focus Assist WNF state no
     longer exists, and the CloudStore registry blob is a lazily-flushed cache
     (writing it changes nothing). Driving the actual UI toggle is the one lever
-    that is guaranteed to track what the user sees. Requires pywinauto.
+    that is guaranteed to track what the user sees.
+
+    Win+N opens the Notification Center with focus on the DND toggle; Enter
+    activates it; Esc closes the flyout. UIA (pywinauto) is used to read the
+    toggle state first so we never flip the wrong way — the retained MQTT
+    message is re-applied on every reconnect, so a blind toggle would invert
+    DND whenever it had been changed by hand.
     """
+    import time
+
     from pywinauto.keyboard import send_keys
 
     try:
-        btn = _find_dnd_toggle()
-        state = btn.get_toggle_state()  # 0 = off, 1 = on
-        if bool(state) != on:
-            btn.click_input()
+        btn = _find_dnd_toggle()  # opens the flyout (Win+N)
+        try:
+            state = bool(btn.get_toggle_state())  # 0 = off, 1 = on
+        except Exception as e:
+            log.warning("cannot read DND toggle state (%s); toggling blind", e)
+            send_keys("{ENTER}")
+            return
+        if state != on:
+            btn.set_focus()
+            send_keys("{ENTER}")
+            time.sleep(0.2)
             end = bool(btn.get_toggle_state())
             if end != on:
-                raise RuntimeError(f"clicked, but DND reads {end} (wanted {on})")
+                raise RuntimeError(f"toggled, but DND reads {end} (wanted {on})")
         else:
             log.info("DND already %s", "on" if on else "off")
     finally:
