@@ -26,12 +26,29 @@ and recovery evidence for the services hosted on Bumblebeam (`192.168.1.15`). Se
   `docker compose … config --quiet`; follow `docs/runbooks/stabilisation.md`.
 - **Adapt, don't replace.** Treat existing working configuration as evidence. Prefer
   extending the current state over starting again.
+- **Concurrent agents:** many may edit in isolated branches/worktrees, but exactly one
+  lead agent merges and deploys, serially, from the canonical checkout — never
+  `docker compose up` from a worktree. This is a convention, not a boundary;
+  Docker-socket authority is the real one. See
+  `docs/adr/0004-concurrent-agent-workflow.md`.
 
 ## Where to start
 
 - Runbook: `docs/runbooks/stabilisation.md`
 - Task register (keep it current as checks complete): `docs/task-register.md`
 - Decisions: `docs/adr/`
+
+## Concurrent agents
+
+One lead agent owns the canonical checkout at `/home/drdavient/docker`, merges others'
+work, and is the only one that deploys — serially, from that checkout. Other agents may
+edit in isolated branches/worktrees. Before a maintenance session's first stateful
+deploy, satisfy the backup gate, then run the manual pre-deploy reproducibility checks
+(on `main`, clean tracked tree, target Compose renders). This is a convention, not a
+technical boundary; the enforcement tooling is pre-designed in
+`docs/concurrent-agent-workflow-plan-v1.md` and deferred until metric triggers fire. Full
+decisions, day-to-day workflow, and the escalation table:
+`docs/adr/0004-concurrent-agent-workflow.md`.
 
 ## Project memory & decisions
 
