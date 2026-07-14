@@ -131,6 +131,7 @@ paths=(
   "$ROOT_DIR/Home_Media"
   "$ROOT_DIR/traefik"
   "$ROOT_DIR/portal"
+  "$ROOT_DIR/seerr"
   "$ROOT_DIR/cloudflare-ddns"
   "$ROOT_DIR/mount-watcher"
   "$ROOT_DIR/pla-util"

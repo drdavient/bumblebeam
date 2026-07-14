@@ -7,6 +7,7 @@
 | `.env`, HA `secrets.yaml`, n8n config, Plex preferences | Plaintext secrets/runtime configuration | No | Yes | Local mode 600 where feasible |
 | HA SQLite/WAL and `.storage` | Stateful application data | No | Yes | Consistent snapshot preferred |
 | n8n SQLite/config | Stateful application data | No | Yes | Consistent snapshot preferred |
+| Seerr SQLite/config | Stateful application data | No | Yes | Family request history, application settings, and Plex integration state |
 | Plex databases and `Preferences.xml` | Stateful application data | No | Yes | Metadata/art/cache are excluded |
 | Radarr/Sonarr/Prowlarr/Deluge/Gluetun config | Stateful application data | No | Yes | Logs, archives, cache excluded |
 | Traefik `acme.json` | Certificate/account state | No | Yes | Must remain mode 600 |

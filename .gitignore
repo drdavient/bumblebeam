@@ -84,6 +84,7 @@ n8n/data/
 # network_key and pan_id; database.db/state.json/coordinator_backup are runtime.
 zigbee/zigbee2mqtt/data/
 zigbee/mosquitto/config/passwd
+seerr/config/
 # Windows focus agent local config holds the broker password (in Bitwarden).
 windows-focus-agent/config.ini
 # discover-dnd.ps1 output: machine-specific registry dumps, diagnostic only
