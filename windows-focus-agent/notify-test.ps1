@@ -1,7 +1,7 @@
 # notify-test.ps1 — fire a Windows toast notification to verify Do Not Disturb.
 #
 # Usage (from PowerShell, in this folder):
-#   powershell -ExecutionPolicy Bypass -File .\notify-test.ps1
+#   .\notify-test.ps1
 #
 # Verification loop:
 #   1. Run it once  -> the toast should pop up (baseline: notifications working).

@@ -1,7 +1,10 @@
 # install-autostart.ps1 — run the focus agent in the background at every logon.
 #
-#   powershell -ExecutionPolicy Bypass -File .\install-autostart.ps1
-#   powershell -ExecutionPolicy Bypass -File .\install-autostart.ps1 -Uninstall
+#   .\install-autostart.ps1
+#   .\install-autostart.ps1 -Uninstall
+#
+# (Needs local scripts enabled once for your user:
+#   Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned )
 #
 # Registers a Scheduled Task that starts pythonw (no console window) with this
 # folder as the working directory (so config.ini is found), and starts it now.

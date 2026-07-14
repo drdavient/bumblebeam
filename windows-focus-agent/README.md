@@ -44,10 +44,17 @@ agent checks them in order):
 
 ## Autostart
 
-Run once from this folder:
+One-time PowerShell setup, if you haven't already: allow local scripts for
+your user (git-pulled files carry no internet mark, so they count as local):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install-autostart.ps1
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+Then run once from this folder:
+
+```powershell
+.\install-autostart.ps1
 ```
 
 This registers a Scheduled Task ("Pomodoro focus agent") that starts
@@ -87,11 +94,11 @@ The moon icon can be ambiguous, so verify DND *functionally* with the included
 toast script:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # baseline: should pop up
+.\notify-test.ps1                   # baseline: should pop up
 python focus_agent.py --test on
-powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # should be SUPPRESSED
+.\notify-test.ps1                   # should be SUPPRESSED
 python focus_agent.py --test off
-powershell -ExecutionPolicy Bypass -File .\notify-test.ps1   # pops up again
+.\notify-test.ps1                   # pops up again
 ```
 
 ## How it fits
