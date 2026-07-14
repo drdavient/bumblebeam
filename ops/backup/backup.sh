@@ -135,7 +135,6 @@ paths=(
   "$ROOT_DIR/mount-watcher"
   "$ROOT_DIR/pla-util"
   "$ROOT_DIR/structurizr-lite"
-  "$ROOT_DIR/workspace"
   "$ROOT_DIR/plex/compose.yml"
   "$ROOT_DIR/plex/split_multi.sh"
   "$ROOT_DIR/plex/mergeParts.sh"

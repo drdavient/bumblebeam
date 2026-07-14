@@ -3,7 +3,7 @@ services:
     image: structurizr/lite
     container_name: structurizr-lite
     ports:
-      - "8181:8181"
+      - "8181:8080"
     volumes:
       - ./workspace:/usr/local/structurizr
     restart: unless-stopped

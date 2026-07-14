@@ -60,6 +60,8 @@ logs/
 Logs/
 archive/
 archives/
+!structurizr-lite/archive/
+!structurizr-lite/archive/*.dsl
 downloads/
 Downloads/
 transcode/
@@ -87,6 +89,8 @@ plex/PMS-small/
 Home_Media.tgz
 traefik/letsencrypt/
 **/.structurizr/
+# Structurizr Lite renders this from workspace.dsl; the JSON is generated runtime state.
+structurizr-lite/workspace/workspace.json
 
 # Captured HTTP request fragments and editor/OS noise
 traefik/GET

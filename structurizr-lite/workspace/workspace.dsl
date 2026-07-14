@@ -1,110 +1,101 @@
-workspace {
+workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host and its services." {
+
+    !identifiers hierarchical
 
     model {
-        player = person "Player"
+        lanClient = person "LAN client" "A household device using Bumblebeam services."
 
-        minecraft = softwareSystem "Minecraft" {
-            gameClient = container "Game Client" {
-                description "The game software running on the player's machine, responsible for rendering, sound, and handling user input."
-                tags "Client"
-            }
+        router = softwareSystem "GL.iNet router" "Provides DHCP, LAN DNS, and the svc.home.arpa service namespace." "External"
+        cloudflare = softwareSystem "Cloudflare" "Provides DNS and the public n8n route." "External"
+        mediaInternet = softwareSystem "Media services and indexers" "Metadata, indexer, tracker, and download endpoints." "External"
 
-            gameServer = container "Game Server" {
-                description "Hosts the game world, runs game logic, and synchronizes state for all connected players."
-                tags "Server"
+        bumblebeam = softwareSystem "Bumblebeam" "The home-infrastructure host at 192.168.1.15." {
+            traefik = container "Traefik" "Reverse proxy for LAN and public HTTP(S) routes." "Traefik"
+            portal = container "Service portal" "Static landing page for local services." "Nginx"
+            homeAssistant = container "Home Assistant" "Home-automation platform; host-networked." "Home Assistant"
+            plex = container "Plex" "Media server; host-networked and backed by Elements media." "Plex"
+            n8n = container "n8n" "Workflow automation, available locally and publicly through Cloudflare DNS." "n8n"
+            zigbee = container "Zigbee2MQTT" "Zigbee bridge and web UI, connected to Mosquitto." "Zigbee2MQTT"
+            mosquitto = container "Mosquitto" "Local MQTT broker for Zigbee2MQTT and Home Assistant." "MQTT"
 
-                // --- Components ---
-                c0 = component "Player State Manager" {
-                    description "Manages player-specific data like health, hunger, inventory, and location."
-                    tags "creative" "pvp" "vanilla"
-                }
-                c1 = component "Locomotion & Physics" {
-                    description "Handles all movement, collision, and world physics like gravity."
-                    tags "creative" "pvp" "vanilla"
-                }
-                c2 = component "Creative Inventory Access" {
-                    description "Provides access to the full item inventory in creative mode."
-                    tags "creative"
-                }
-                c3 = component "Health & Damage System" {
-                    description "Manages health points and processes all incoming damage from various sources."
-                    tags "pvp" "vanilla"
-                }
-                c4 = component "Combat Logic" {
-                    description "Determines the outcome of player and mob attacks (e.g., hit detection, critical hits)."
-                    tags "pvp" "vanilla"
-                }
-                c5 = component "Mob AI" {
-                    description "Controls the behavior and actions of non-player characters (e.g., creepers, zombies)."
-                    tags "vanilla"
-                }
-                c6 = component "Crafting System" {
-                    description "Handles item crafting logic based on recipes."
-                    tags "vanilla"
-                }
-                c7 = component "Redstone System" {
-                    description "Processes logic for redstone circuits."
-                    tags "vanilla"
-                }
-                c8 = component "Multiplayer Chat" {
-                    description "Manages sending and receiving chat messages between players."
-                    tags "creative" "pvp" "vanilla"
-                }
-
-                // --- CORRECTED: Internal Relationships are defined inside their parent container ---
-                // Now we can just use the component variable names (c1, c0, etc.)
-                c1 -> c0 "Updates player location in"
-                c2 -> c0 "Modifies player inventory via"
-                c4 -> c3 "Deals damage using"
-                c5 -> c4 "Initiates attacks using"
-                c5 -> c1 "Navigates world using"
-                c3 -> c0 "Updates player health in"
-                c6 -> c0 "Uses and updates inventory in"
+            group "HOME_MEDIA — VPN-only" {
+                gluetun = container "Gluetun" "VPN gateway and kill-switch. All HOME_MEDIA outbound traffic and tests traverse this container." "VPN"
+                sonarr = container "Sonarr" "TV library automation; shares Gluetun's network namespace." "VPN-only"
+                radarr = container "Radarr" "Movie library automation; shares Gluetun's network namespace." "VPN-only"
+                prowlarr = container "Prowlarr" "Indexer manager; shares Gluetun's network namespace." "VPN-only"
+                deluge = container "Deluge" "Torrent client; shares Gluetun's network namespace." "VPN-only"
+                jackett = container "Jackett" "Legacy indexer service; shares Gluetun's network namespace." "VPN-only"
+                flareSolverr = container "FlareSolverr" "Browser-based challenge helper; shares Gluetun's network namespace." "VPN-only"
             }
         }
 
-        // Top-level relationships between containers remain here
-        player -> gameClient "Uses" "Keyboard, Mouse, Screen"
-        gameClient -> gameServer "Sends player actions and receives game state" "Custom TCP Protocol"
+        lanClient -> router "Resolves host and service names"
+        router -> bumblebeam "Routes *.svc.home.arpa to"
+        lanClient -> bumblebeam.traefik "Uses reverse-proxied services" "HTTP"
+        lanClient -> bumblebeam.homeAssistant "Uses" "HTTP"
+        lanClient -> bumblebeam.plex "Streams from" "HTTP"
+        bumblebeam.traefik -> bumblebeam.portal "Routes to" "HTTP"
+        bumblebeam.traefik -> bumblebeam.homeAssistant "Routes to" "HTTP"
+        bumblebeam.traefik -> bumblebeam.plex "Routes to" "HTTP"
+        bumblebeam.traefik -> bumblebeam.n8n "Routes to" "HTTP"
+        bumblebeam.traefik -> bumblebeam.gluetun "Routes media UIs to" "HTTP"
+        cloudflare -> bumblebeam.traefik "Resolves public n8n route to" "DNS/HTTPS"
+        bumblebeam.zigbee -> bumblebeam.mosquitto "Publishes and subscribes" "MQTT"
+        bumblebeam.homeAssistant -> bumblebeam.mosquitto "Uses" "MQTT"
+        bumblebeam.sonarr -> bumblebeam.gluetun "Shares network namespace with"
+        bumblebeam.radarr -> bumblebeam.gluetun "Shares network namespace with"
+        bumblebeam.prowlarr -> bumblebeam.gluetun "Shares network namespace with"
+        bumblebeam.deluge -> bumblebeam.gluetun "Shares network namespace with"
+        bumblebeam.jackett -> bumblebeam.gluetun "Shares network namespace with"
+        bumblebeam.flareSolverr -> bumblebeam.gluetun "Shares network namespace with"
+        bumblebeam.radarr -> bumblebeam.prowlarr "Uses indexers from" "HTTP"
+        bumblebeam.sonarr -> bumblebeam.prowlarr "Uses indexers from" "HTTP"
+        bumblebeam.prowlarr -> bumblebeam.flareSolverr "Uses when required" "HTTP"
+        bumblebeam.sonarr -> bumblebeam.deluge "Submits downloads to" "HTTP"
+        bumblebeam.radarr -> bumblebeam.deluge "Submits downloads to" "HTTP"
+        bumblebeam.gluetun -> mediaInternet "All HOME_MEDIA outbound traffic and tests" "VPN"
     }
 
     views {
-        systemContext minecraft {
+        systemContext bumblebeam "SystemContext" {
             include *
             autolayout lr
         }
 
-        container minecraft {
+        container bumblebeam "Containers" {
             include *
             autolayout lr
         }
-
-        component gameServer GameServerComponents "Game Server Components" {
-            include *
-            // Layout is now driven by relationships, creating a more logical diagram
-        }
-
-        filtered GameServerComponents include "creative" "CreativeMode" "Creative Mode Components"
-        filtered GameServerComponents include "pvp" "MinimalPvPMode" "Minimal PvP Mode Components"
-        filtered GameServerComponents include "vanilla" "FullVanillaMode" "Full Vanilla Mode Components"
 
         styles {
-            element "person" {
-                background "#08427B"
-                color "#ffffff"
+            element "Person" {
                 shape person
+                background #08427b
+                color #ffffff
             }
-            element "softwareSystem" {
-                background "#1168BD"
-                color "#ffffff"
+            element "External" {
+                background #999999
+                color #ffffff
             }
-            element "container" {
-                background "#438DD5"
-                color "#ffffff"
+            element "Traefik" {
+                background #24a1c1
+                color #ffffff
             }
-            element "component" {
-                background "#85BBF0"
-                color "#000000"
+            element "VPN" {
+                background #3b7a57
+                color #ffffff
+            }
+            element "VPN-only" {
+                background #5b8c5a
+                color #ffffff
+            }
+            element "Container" {
+                background #438dd5
+                color #ffffff
+            }
+            relationship "VPN" {
+                color #3b7a57
+                thickness 4
             }
         }
     }
