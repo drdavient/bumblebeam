@@ -75,6 +75,32 @@ _DND_FLYOUTS = (
 )
 
 
+def _focused_dnd_button(timeout=1.5):
+    """Return the DND toggle if it currently has keyboard focus, else None.
+
+    Win+N opens the Notification Center with focus already on the toggle, so
+    asking UIA for the focused element is O(1) — no tree search (which takes
+    seconds on this flyout).
+    """
+    import re
+    import time
+
+    from pywinauto.controls.uiawrapper import UIAWrapper
+    from pywinauto.uia_defines import IUIA
+    from pywinauto.uia_element_info import UIAElementInfo
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            btn = UIAWrapper(UIAElementInfo(IUIA().iuia.GetFocusedElement()))
+            if re.match("(?i)do not disturb", btn.window_text() or ""):
+                return btn
+        except Exception:
+            pass
+        time.sleep(0.05)
+    return None
+
+
 def _find_dnd_toggle(timeout=5.0):
     """Open the flyout holding the 'Do not disturb' toggle and return the button.
 
@@ -83,6 +109,14 @@ def _find_dnd_toggle(timeout=5.0):
     from pywinauto import Desktop
     from pywinauto.keyboard import send_keys
 
+    # Fast path: Win+N focuses the toggle directly.
+    send_keys("{VK_LWIN down}n{VK_LWIN up}")
+    btn = _focused_dnd_button()
+    if btn is not None:
+        return btn
+
+    # Slow path: search the flyout trees (older builds / focus landed elsewhere).
+    send_keys("{ESC}")  # close whatever Win+N opened before reopening below
     desktop = Desktop(backend="uia")
     last_err = None
     for hotkey, title in _DND_FLYOUTS:
@@ -92,7 +126,7 @@ def _find_dnd_toggle(timeout=5.0):
             win.wait("visible", timeout=timeout, retry_interval=0.05)
             return win.child_window(
                 title_re="(?i)do not disturb.*", control_type="Button"
-            ).wait("exists", timeout=1, retry_interval=0.05)
+            ).wait("exists", timeout=2, retry_interval=0.05)
         except Exception as e:
             last_err = e
             send_keys("{ESC}")
