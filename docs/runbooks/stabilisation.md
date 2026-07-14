@@ -139,7 +139,11 @@ Recover in this order and record evidence in `docs/evidence/`:
 2. Plex: DNS, port 32400, proxy route, server ownership, and local playback.
 3. n8n: DNS, port 5678/container health, local/public proxy routes, and a test webhook.
 4. Gluetun/media: VPN public IP, DNS, tunnel health, then each dependent UI and a
-   harmless end-to-end download/import test.
+   harmless end-to-end download/import test. **Imperative:** every test that originates
+   on or traverses HOME_MEDIA must execute inside Gluetun's VPN namespace (or a
+   container using `network_mode: container:gluetun`); never issue an outbound media,
+   tracker, DNS, or download probe from the host, an agent sandbox, or another Docker
+   network. See `docs/adr/0007-home-media-vpn-test-boundary.md`.
 
 If HA works on `192.168.1.15:8123` but its Traefik route times out, test port 8123
 from inside Traefik. Traefik reaches host-networked services through

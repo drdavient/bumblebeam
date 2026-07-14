@@ -24,6 +24,11 @@ and recovery evidence for the services hosted on Bumblebeam (`192.168.1.15`). Se
   (or are classified reproducible/bulk), never in Git.
 - **Validate before committing or deploying.** For Compose changes run
   `docker compose … config --quiet`; follow `docs/runbooks/stabilisation.md`.
+- **HOME_MEDIA VPN boundary is imperative.** Every test that originates on, or sends
+  traffic through, the HOME_MEDIA/Gluetun network must run through Gluetun's VPN
+  namespace. Do not use the host, an agent sandbox, or an ordinary Docker network for
+  an outbound media, tracker, DNS, or download test. See
+  `docs/adr/0007-home-media-vpn-test-boundary.md`.
 - **Adapt, don't replace.** Treat existing working configuration as evidence. Prefer
   extending the current state over starting again.
 - **Concurrent agents:** many may edit in isolated branches/worktrees, but exactly one
