@@ -93,7 +93,7 @@ if [[ ! -f "$LOCAL_REPOSITORY/config" ]]; then
 fi
 
 running_containers=()
-stateful_containers=(deluge radarr sonarr prowlarr n8n homeassistant plex traefik)
+stateful_containers=(deluge radarr sonarr prowlarr shelfarr audiobookshelf n8n homeassistant plex traefik)
 restart_containers() {
   if ((${#running_containers[@]})); then
     log "restarting previously running containers: ${running_containers[*]}"
@@ -129,6 +129,7 @@ paths=(
   "$ROOT_DIR/HomeAssistant"
   "$ROOT_DIR/n8n"
   "$ROOT_DIR/Home_Media"
+  "$ROOT_DIR/Audiobookshelf"
   "$ROOT_DIR/traefik"
   "$ROOT_DIR/portal"
   "$ROOT_DIR/seerr"

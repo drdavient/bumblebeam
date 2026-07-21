@@ -14,6 +14,7 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
             portal = container "Service portal" "Static landing page for local services." "Nginx"
             homeAssistant = container "Home Assistant" "Home-automation platform; host-networked." "Home Assistant"
             plex = container "Plex" "Media server; host-networked and backed by Elements media." "Plex"
+            audiobookshelf = container "Audiobookshelf" "Audiobook and podcast library server; reads the Elements library and is reverse-proxied by Traefik." "Container"
             n8n = container "n8n" "Workflow automation, available locally and publicly through Cloudflare DNS." "n8n"
             seerr = container "Seerr" "Family media discovery and request interface; authenticates users through Plex." "Seerr"
             zigbee = container "Zigbee2MQTT" "Zigbee bridge and web UI, connected to Mosquitto." "Zigbee2MQTT"
@@ -24,6 +25,7 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
                 sonarr = container "Sonarr" "TV library automation; shares Gluetun's network namespace." "VPN-only"
                 radarr = container "Radarr" "Movie library automation; shares Gluetun's network namespace." "VPN-only"
                 prowlarr = container "Prowlarr" "Indexer manager; shares Gluetun's network namespace." "VPN-only"
+                shelfarr = container "Shelfarr" "Audiobook and ebook request manager; shares Gluetun's network namespace." "VPN-only"
                 deluge = container "Deluge" "Torrent client; shares Gluetun's network namespace." "VPN-only"
                 flareSolverr = container "FlareSolverr" "Browser-based challenge helper; shares Gluetun's network namespace." "VPN-only"
             }
@@ -37,6 +39,7 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
         bumblebeam.traefik -> bumblebeam.portal "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.homeAssistant "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.plex "Routes to" "HTTP"
+        bumblebeam.traefik -> bumblebeam.audiobookshelf "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.n8n "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.seerr "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.gluetun "Routes media UIs to" "HTTP"
@@ -46,6 +49,7 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
         bumblebeam.sonarr -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.radarr -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.prowlarr -> bumblebeam.gluetun "Shares network namespace with"
+        bumblebeam.shelfarr -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.deluge -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.flareSolverr -> bumblebeam.gluetun "Shares network namespace with"
         bumblebeam.radarr -> bumblebeam.prowlarr "Uses indexers from" "HTTP"
@@ -55,6 +59,9 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
         bumblebeam.prowlarr -> bumblebeam.flareSolverr "Uses when required" "HTTP"
         bumblebeam.sonarr -> bumblebeam.deluge "Submits downloads to" "HTTP"
         bumblebeam.radarr -> bumblebeam.deluge "Submits downloads to" "HTTP"
+        bumblebeam.shelfarr -> bumblebeam.prowlarr "Searches indexers through" "HTTP"
+        bumblebeam.shelfarr -> bumblebeam.deluge "Submits downloads to" "HTTP"
+        bumblebeam.shelfarr -> bumblebeam.audiobookshelf "Triggers library scans on" "HTTP"
         bumblebeam.gluetun -> mediaInternet "All HOME_MEDIA outbound traffic and tests" "VPN"
     }
 

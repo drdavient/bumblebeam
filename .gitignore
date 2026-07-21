@@ -77,6 +77,8 @@ app-shelf/filebrowser/
 Home_Media/*
 !Home_Media/compose.yml
 !Home_Media/.env.example
+Audiobookshelf/config/
+Audiobookshelf/metadata/
 HomeAssistant/hadata/.storage/
 HomeAssistant/hadata/.HA_VERSION
 HomeAssistant/hadata/backups/

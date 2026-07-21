@@ -30,6 +30,11 @@ http:
       service: prowlarr
       entryPoints: ["web"]
 
+    shelfarr:
+      rule: "Host(`shelfarr`, `shelfarr.svc.home.arpa`)"
+      service: shelfarr
+      entryPoints: ["web"]
+
     traefik-dashboard:
       rule: "Host(`traefik`, `traefik.svc.home.arpa`, `traefik.home.arpa`)"
       service: api@internal
@@ -65,3 +70,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://gluetun:9696"
+
+    shelfarr:
+      loadBalancer:
+        servers:
+          - url: "http://gluetun:5056"

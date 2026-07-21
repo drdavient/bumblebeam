@@ -15,6 +15,7 @@ services:
       - 8112:8112              # Deluge web interface
       - 8191:8191              # FlareSolverr
       - 9696:9696              # Prowlarr
+      - 5056:5056              # Shelfarr web interface
       # - 8080:8080                  # Nginx web portal
       # - 8388:8388/tcp              # Shadowsocks TCP
       # - 8388:8388/udp              # Shadowsocks UDP
@@ -94,6 +95,27 @@ services:
       - TZ=Europe/London
     volumes:
       - ./prowlarr-config:/config
+    depends_on:
+      vpn:
+        condition: service_started
+      elements-waiter:
+        condition: service_healthy
+    network_mode: "container:gluetun"
+    restart: unless-stopped
+
+  shelfarr:
+    image: ghcr.io/pedro-revez-silva/shelfarr:latest
+    container_name: shelfarr
+    environment:
+      - SOLID_QUEUE_IN_PUMA=1
+      - HTTP_PORT=5056
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+    volumes:
+      - ./shelfarr-data:/rails/storage
+      - /mnt/Elements/media/audiobooks:/audiobooks
+      - /mnt/Elements/Downloads/Transmission/:/downloads
     depends_on:
       vpn:
         condition: service_started
