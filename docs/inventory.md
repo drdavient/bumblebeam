@@ -15,7 +15,7 @@
 | App shelf `apks/*.apk` (seed) | Excluded/reproducible | No | Yes | Re-downloadable via `fetch-seed-apks.sh` (SHA-256 pinned) |
 | App shelf `apks/*.apk` (owner-supplied, e.g. owned games) + Filebrowser DB | Stateful/bulk application data | No | Yes | Owner-supplied purchases; never fetched from mirrors, never committed |
 | Logs, caches, thumbnails, transcodes, archives | Excluded/reproducible | No | No | Regenerated or low recovery value |
-| Downloads and `/mnt/Elements/Video`, Music | Bulk media | No | No | Separate accepted risk/workstream |
+| Downloads and media libraries (`/mnt/Elements/media/`; legacy `/mnt/Elements/Video`, `Music`) | Bulk media | No | No | Separate accepted risk/workstream; migrate by the staged plan in ADR 0010 |
 | Restic repository internals | Encrypted backup state | No | N/A | Access only through Restic |
 
 Before staging, run `git status --short --ignored` and the secret-location audit in
