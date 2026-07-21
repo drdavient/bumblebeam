@@ -3,8 +3,8 @@
 Canonical, harness-agnostic instructions for any AI coding harness — claude-code,
 codex, opencode, gemini-cli, grok-cli, or whatever comes next — working in this
 repo. This file is the single source of truth. Every harness reaches it through a
-thin shim at the path that harness natively reads; run the **`/onboard`** skill to
-wire a new harness in.
+thin shim at the path that harness natively reads; run the **`/onboard-harness`**
+skill to wire a new harness in.
 
 ## What this repo is
 
@@ -60,7 +60,9 @@ decisions, day-to-day workflow, and the escalation table:
 Durable, project-scoped knowledge lives in **versioned guidance**, not in any
 harness's private memory. Record decisions as ADRs under `docs/adr/` and ongoing
 work in `docs/task-register.md`. The agent-configuration standard itself is
-`docs/adr/0002-agent-configuration-and-memory-standard.md`.
+[ADR 0001 in the agents repo](https://github.com/drdavient/agents/blob/main/docs/adr/0001-agent-configuration-and-memory-standard.md)
+(the local `docs/adr/0002-agent-configuration-and-memory-standard.md` is a
+relocation stub).
 
 ## Memory policy
 
@@ -84,7 +86,8 @@ the knowledge** (not the memory file) into versioned guidance:
   harness's own directory, and credential/session state stays out of Git.
 - Two global skills implement this standard (installed under `~/.agents/skills/`, so
   they surface in every project):
-  - **`/onboard`** — wire a harness into this standard (the entry point; runs
-    `/bootstrap` first if `.agents/AGENTS.md` is missing/empty).
-  - **`/bootstrap`** — establish/extend `.agents/AGENTS.md`, idempotently and without
-    clobbering existing content.
+  - **`/onboard-harness`** — the entry point; wires a harness into this standard
+    (runs `/bootstrap-project` first if `.agents/AGENTS.md` is missing/empty).
+  - **`/bootstrap-project`** — establishes/extends `.agents/AGENTS.md`, idempotently
+    and without clobbering existing content. Normally invoked by `/onboard-harness`;
+    run directly only for a content top-up.
