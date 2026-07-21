@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Versioned pre-commit gate. Wired per clone with:
+#   git config core.hooksPath ops/git-hooks
+# Runs on every `git commit` by any process; non-zero exit aborts the commit.
+# Bypassing with --no-verify is forbidden by .agents/AGENTS.md.
+set -uo pipefail
+
+fail=0
+
+# 1. Every staged compose file must render.
+while IFS= read -r f; do
+  [ -f "$f" ] || continue
+  if ! (cd "$(dirname "$f")" && docker compose -f "$(basename "$f")" config --quiet); then
+    echo "pre-commit: docker compose config failed for $f" >&2
+    fail=1
+  fi
+done < <(git diff --cached --name-only --diff-filter=ACMR -- '*compose*.yml' '*compose*.yaml')
+
+# 2. High-precision secret scan over staged additions only.
+#    Interpolations (${VAR}) and short values are deliberately not matched.
+patterns='-----BEGIN ([A-Z]+ )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}|(password|passwd|secret|token|api_?key)[=:][[:space:]]*["'\''][^"'\''$]{8,}["'\'']'
+matches=$(git diff --cached -U0 | grep '^+' | grep -v '^+++' | grep -Ei -e "$patterns" | grep -v '\${' || true)
+if [ -n "$matches" ]; then
+  echo "pre-commit: staged addition matches a secret pattern:" >&2
+  printf '%s\n' "$matches" >&2
+  echo "pre-commit: unstage the secret (runtime values stay out of Git — docs/inventory.md)" >&2
+  fail=1
+fi
+
+exit "$fail"

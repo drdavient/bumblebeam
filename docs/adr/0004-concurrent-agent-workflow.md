@@ -93,7 +93,9 @@ create a new ADR). The metric that fired becomes that amendment's justification.
 
 ### Escalation tally
 
-No triggers recorded.
+| Date | Trigger | Event |
+|---|---|---|
+| 2026-07-21 | Coordination cost (1 of 2 in 90 days) | Week-long drift discovered during commit sweep: seven uncommitted workstreams, one deployed stack (`video/`) with no repo presence, one running container (`readyroom-bot`) unknown to the repo, stale task register. Response: layered session/commit enforcement (ADR 0012), which is *complementary* to — not an escalation of — this ADR's deferred concurrency tooling. |
 
 ## Consequences
 
