@@ -18,6 +18,7 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
             n8n = container "n8n" "Workflow automation, available locally and publicly through Cloudflare DNS." "n8n"
             seerr = container "Seerr" "Family media discovery and request interface; authenticates users through Plex." "Seerr"
             zigbee = container "Zigbee2MQTT" "Zigbee bridge and web UI, connected to Mosquitto." "Zigbee2MQTT"
+            structurizr = container "Structurizr Lite" "Architecture diagram viewer for this workspace; reverse-proxied by Traefik (direct port 8181 retained until Server handover)." "Container"
             mosquitto = container "Mosquitto" "Local MQTT broker for Zigbee2MQTT and Home Assistant." "MQTT"
 
             group "HOME_MEDIA — VPN-only" {
@@ -42,6 +43,7 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
         bumblebeam.traefik -> bumblebeam.audiobookshelf "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.n8n "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.seerr "Routes to" "HTTP"
+        bumblebeam.traefik -> bumblebeam.structurizr "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.gluetun "Routes media UIs to" "HTTP"
         cloudflare -> bumblebeam.traefik "Resolves public n8n route to" "DNS/HTTPS"
         bumblebeam.zigbee -> bumblebeam.mosquitto "Publishes and subscribes" "MQTT"
