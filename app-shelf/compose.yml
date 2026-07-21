@@ -1,0 +1,45 @@
+services:
+  # Touch-friendly download catalog for the kids' tablets (read-only).
+  app-shelf:
+    build: ./catalog
+    image: bumblebeam/app-shelf:latest
+    container_name: app-shelf
+    environment:
+      APKS_DIR: /apks
+      PORT: "8000"
+    volumes:
+      - ./apks:/apks:ro
+    networks:
+      - traefik-net
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik-net
+      traefik.http.routers.app-shelf.rule: "Host(`apps`, `apps.svc.home.arpa`)"
+      traefik.http.routers.app-shelf.entrypoints: web
+      traefik.http.services.app-shelf.loadbalancer.server.port: "8000"
+    restart: unless-stopped
+
+  # Web file manager for the parent: upload / delete APKs (writes into ./apks).
+  app-shelf-files:
+    image: filebrowser/filebrowser:s6
+    container_name: app-shelf-files
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+    volumes:
+      - ./apks:/srv
+      - ./filebrowser/database:/database
+      - ./filebrowser/config:/config
+    networks:
+      - traefik-net
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik-net
+      traefik.http.routers.app-shelf-files.rule: "Host(`appfiles`, `appfiles.svc.home.arpa`)"
+      traefik.http.routers.app-shelf-files.entrypoints: web
+      traefik.http.services.app-shelf-files.loadbalancer.server.port: "80"
+    restart: unless-stopped
+
+networks:
+  traefik-net:
+    external: true

@@ -11,6 +11,9 @@
 | Plex databases and `Preferences.xml` | Stateful application data | No | Yes | Metadata/art/cache are excluded |
 | Radarr/Sonarr/Prowlarr/Deluge/Gluetun config | Stateful application data | No | Yes | Logs, archives, cache excluded |
 | Traefik `acme.json` | Certificate/account state | No | Yes | Must remain mode 600 |
+| App shelf catalog app + `catalog.json` + `fetch-seed-apks.sh` | Declarative configuration | Yes | Yes | Seed APK set is reproducible from the fetch script |
+| App shelf `apks/*.apk` (seed) | Excluded/reproducible | No | Yes | Re-downloadable via `fetch-seed-apks.sh` (SHA-256 pinned) |
+| App shelf `apks/*.apk` (owner-supplied, e.g. owned games) + Filebrowser DB | Stateful/bulk application data | No | Yes | Owner-supplied purchases; never fetched from mirrors, never committed |
 | Logs, caches, thumbnails, transcodes, archives | Excluded/reproducible | No | No | Regenerated or low recovery value |
 | Downloads and `/mnt/Elements/Video`, Music | Bulk media | No | No | Separate accepted risk/workstream |
 | Restic repository internals | Encrypted backup state | No | N/A | Access only through Restic |

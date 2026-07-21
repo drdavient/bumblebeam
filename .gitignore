@@ -70,6 +70,10 @@ thumbnails/
 Thumbnails/
 
 # Service runtime trees (protected by encrypted backup, not Git)
+# App shelf: APK binaries are reproducible via app-shelf/fetch-seed-apks.sh;
+# user-added APKs (e.g. owned games) and Filebrowser state are runtime, not Git.
+app-shelf/apks/*.apk
+app-shelf/filebrowser/
 Home_Media/*
 !Home_Media/compose.yml
 !Home_Media/.env.example

@@ -1,0 +1,26 @@
+{
+  "org.videolan.vlc_13070105.apk": {
+    "label": "VLC Media Player",
+    "note": "Plays videos and music in almost any format."
+  },
+  "com.gitlab.ardash.appleflinger.android_1006001.apk": {
+    "label": "Apple Flinger",
+    "note": "Slingshot physics game — fling fruit to knock down towers (Angry Birds style)."
+  },
+  "com.agateau.tinywheels.android_33.apk": {
+    "label": "Pixel Wheels",
+    "note": "Fast top-down kart racing. Easy for little ones."
+  },
+  "com.dozingcatsoftware.bouncy_43.apk": {
+    "label": "Vector Pinball",
+    "note": "Simple, colourful pinball."
+  },
+  "se.tube42.kidsmem.android_17.apk": {
+    "label": "Candy Memory",
+    "note": "Match-the-pairs memory game for young children."
+  },
+  "dev.alexjyong.babbypaint_9.apk": {
+    "label": "BabbyPaint",
+    "note": "Finger-painting for kids — no menus to get lost in."
+  }
+}
