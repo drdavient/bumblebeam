@@ -2,7 +2,8 @@
 # Set/replace a basic-auth user for the Structurizr Server route (ADR 0014).
 # Prompts silently (nothing echoes, nothing lands in argv/history/logs), hashes
 # with APR1, and rewrites that user's line in the gitignored usersfile.
-# Traefik reads the file per-request — no restart needed.
+# Traefik loads the usersfile only when the middleware is (re)created, NOT per
+# request — so this script restarts Traefik (a few seconds' blip on all routes).
 # Usage: traefik/set-password.sh [username]   (default: dave)
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -23,3 +24,6 @@ printf '%s:%s\n' "$user" "$hash" >> "$file.tmp"
 mv "$file.tmp" "$file"
 chmod 600 "$file"
 echo "updated $user in $file"
+echo "restarting traefik to load the new credential..."
+docker restart traefik >/dev/null
+echo "done — log in as '$user' now"
