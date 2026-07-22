@@ -14,10 +14,12 @@ and recovery evidence for the services hosted on Bumblebeam (`192.168.1.15`). Se
 
 ## Ground rules
 
-- **Start every session with `/preflight`.** Run
-  `bash .agents/skills/preflight/preflight.sh` before other work and act on each
-  finding (claude-code receives the report automatically via a SessionStart hook).
-  The versioned commit gate `ops/git-hooks/pre-commit` must be wired per clone
+- **IMPERATIVE — execute preflight before any user instruction.** Your first
+  action in every session, before addressing the user's request, is:
+  `bash .agents/skills/preflight/preflight.sh`. Act on each finding. Skipping it
+  is a workflow violation. (If a PREFLIGHT report is already present verbatim in
+  your context, it has run — do not run it twice.) The versioned commit gate
+  `ops/git-hooks/pre-commit` must be wired per clone
   (`git config core.hooksPath ops/git-hooks`); **never** bypass it with
   `git commit --no-verify`. See `docs/adr/0012-layered-workflow-enforcement.md`.
 - **LAN naming is split by role** (see `docs/adr/0003-host-and-service-namespaces.md`):
