@@ -28,3 +28,7 @@ The Windows client also runs on Ultra-Magners rather than Bumblebeam.
 This correction keeps a working DND integration stable while making space for a
 separate Pomodoro tracker. The future tracker must not infer completion from a
 nominal face duration or treat DND as a source of timer state.
+
+Tracker design and its implementation plan are owned by the separate
+[`pomodoro-tracker`](https://github.com/drdavient/pomodoro-tracker) repository;
+see its [boundary ADR](https://github.com/drdavient/pomodoro-tracker/blob/main/docs/adr/0001-tracker-boundary-and-external-timer-authority.md).
