@@ -70,3 +70,36 @@ a coordination-cost data point, not a trigger firing.
 - The semantic gap remains honest: a stale register row is a definition-of-done
   duty; preflight surfaces only the mechanical signals (exactly the ones that
   caught `video/` and `readyroom-bot`).
+
+## Amendment (2026-07-22): doctrine-only delivery, monitored, with an escalation ladder
+
+**Measured evidence.** Headless claude-code trials (fresh sessions, realistic
+first tasks, tool calls parsed from transcripts) showed the delivery mechanism
+matters and prose wording is load-bearing:
+
+- SessionStart hook (test fixture): report present in context before the first
+  prompt, 1/1, zero model judgment involved.
+- Doctrine, original wording ("claude-code receives the report automatically…"):
+  **0/3** ran preflight — the rule was verifiably loaded and quotable, but the
+  "automatic" clause gave sessions a skip excuse.
+- Doctrine, reworded as an unconditional first-action imperative: **3/3**, with
+  preflight as the first tool call every time.
+
+**Decision.** Ship doctrine-only delivery (the layer-2 hook is designed but *not
+installed*), and make compliance and drift observable instead of assumed:
+`preflight.sh` appends one line per run to a gitignored `runs.log` beside the
+script — timestamp, `source=` (`manual`/`hook`/`cron`), branch, findings count,
+finding keys. Review the log when working the register; each rung below is
+implemented only when its trigger fires (YAGNI — every deferred design stays
+recorded here).
+
+| Rung | Trigger (from `runs.log` / transcripts) | Deferred design |
+|---|---|---|
+| 1. Daily cron baseline | Any anomaly key persisting > 7 days unremediated, or a 14-day gap in runs despite active sessions | systemd timer running `preflight.sh --source=cron` daily: drift detection independent of agent behaviour |
+| 2. SessionStart hook | Two sessions in 30 days observed skipping preflight, after one wording tune has been tried | The layer-2 hook from this ADR, added to `.claude/settings.json` (owner edit — the harness classifier blocks agents from writing hook config): `hooks.SessionStart`, matcher `startup\|resume\|clear`, command `[ -x "$CLAUDE_PROJECT_DIR/.agents/skills/preflight/preflight.sh" ] && bash "$CLAUDE_PROJECT_DIR/.agents/skills/preflight/preflight.sh" \|\| true`, timeout 10. Deterministic delivery; ends the wording game |
+| 3. Eval harness | Wording tunes fail twice to restore compliance | ~10 realistic prompts (train/holdout split) + a scorer parsing headless-session transcripts for compliance predicates — the measurement rig from the 2026-07-22 trials, formalised |
+| 4. SkillOpt | Eval-driven manual tuning stalls | [microsoft/SkillOpt](https://github.com/microsoft/SkillOpt) (MIT): validation-gated text-space optimization of a **bounded artifact only** (the preflight rule or SKILL.md, never whole-file AGENTS.md — reward-hacking risk against unmeasured safety rules). Cheap inner-loop rollouts on a local model (LM Studio on Ultra-Magners / Ollama on Bumblebeam as a tracked Compose stack, LAN-only); acceptance gate = small claude-code holdout on the real harness; adoption PR-gated |
+
+Rungs are ordered by cost and escape earlier rungs' failure modes; the hook
+(rung 2) permanently solves *delivery*, so rungs 3–4 exist only for *content*
+quality problems the hook cannot fix.
