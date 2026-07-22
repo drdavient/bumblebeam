@@ -52,7 +52,11 @@ if running=$(timeout 5 docker ps --format '{{.Names}}' 2>/dev/null); then
   unknown=""
   while IFS= read -r c; do
     [ -z "$c" ] && continue
-    grep -qxF "$c" <<<"$tracked" || unknown="$unknown $c"
+    if ! grep -qxF "$c" <<<"$tracked"; then
+      src=$(timeout 5 docker inspect "$c" \
+              --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' 2>/dev/null)
+      unknown="$unknown $c(${src:-docker run})"
+    fi
   done <<<"$running"
   [ -n "$unknown" ] && add unknown-containers "running container(s) named in no tracked compose file:$unknown"
 else
