@@ -34,10 +34,43 @@ sudo tailscale up         # prints an auth URL; open it, sign in
 Alternatively disable expiry for Bumblebeam in the admin console
 (Machines → bumblebeam → Disable key expiry) — reasonable for an always-on server.
 
+## Remote LAN and service access (subnet router + split DNS)
+
+Since 2026-07-22 (ADR 0009 amendment) the tailnet provides the whole LAN, not
+just SSH. Configuration lives in three places:
+
+- **Host:** `sudo tailscale up --advertise-routes=192.168.1.0/24
+  --advertise-exit-node` (flags are not cumulative — always re-run with the
+  full set). Kernel forwarding: `/etc/sysctl.d/99-tailscale.conf` sets
+  `net.ipv4.ip_forward=1` and `net.ipv6.conf.all.forwarding=1`.
+- **Admin console approvals:** Machines → bumblebeam → route settings —
+  approve `192.168.1.0/24` **and** tick "Use as exit node"; also "Disable key
+  expiry" for bumblebeam (clients keep default expiry).
+- **Admin console DNS:** split DNS nameserver `192.168.1.2` restricted to
+  `home.arpa` (and `svc.home.arpa`, kept for clarity); search domain
+  `svc.home.arpa` only — see the ADR amendment for why `home.arpa` must not be
+  a search suffix. MagicDNS stays enabled; split DNS composes with it.
+
+Client behaviour once set: `structurizr.svc.home.arpa` and bare `structurizr`
+work anywhere; printers are added by LAN IP (mDNS discovery does not traverse
+routed subnets); "Use exit node" stays **off** day-to-day — toggle it on
+untrusted Wi-Fi only (throughput is bounded by home upload; if home is down
+while enabled, the phone has no internet until toggled off).
+
+Verify after any change:
+
+```bash
+tailscale status --json | grep -E 'PrimaryRoutes|ExitNodeOption' -A1
+tailscale dns status      # split-DNS routes + search domains as served to nodes
+```
+
+`tailscale dns status` shows the *exact* strings the console serves — it caught
+a typo'd split-DNS domain (`svc.home.arpas`) that silently matched nothing.
+
 ## Admin console
 
 <https://login.tailscale.com/admin> — machines list, key expiry, MagicDNS
-(Settings → DNS), device removal.
+(Settings → DNS), device removal, route/exit-node approvals.
 
 ## Failure modes
 
