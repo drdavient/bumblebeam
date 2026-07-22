@@ -99,6 +99,8 @@ plex/PMS/
 plex/PMS-small/
 Home_Media.tgz
 traefik/letsencrypt/
+# Basic-auth usersfiles (password hashes: runtime credentials, in Restic set)
+traefik/users/
 **/.structurizr/
 # Structurizr Lite renders this from workspace.dsl; the JSON is generated runtime state.
 structurizr-lite/workspace/workspace.json
