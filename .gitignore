@@ -102,6 +102,8 @@ traefik/letsencrypt/
 **/.structurizr/
 # Structurizr Lite renders this from workspace.dsl; the JSON is generated runtime state.
 structurizr-lite/workspace/workspace.json
+# Structurizr Server data directory: workspaces + server state (runtime; in Restic set).
+structurizr-server/data/
 
 # Captured HTTP request fragments and editor/OS noise
 traefik/GET
