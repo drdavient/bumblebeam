@@ -21,7 +21,8 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: traefik-net
-      traefik.http.routers.structurizr-server.rule: "Host(`structurizr-server`, `structurizr-server.svc.home.arpa`)"
+      # Includes the retired Lite hostnames so old bookmarks land on the Server.
+      traefik.http.routers.structurizr-server.rule: "Host(`structurizr-server`, `structurizr-server.svc.home.arpa`, `structurizr`, `structurizr.svc.home.arpa`)"
       traefik.http.routers.structurizr-server.entrypoints: web
       # Open core has no native auth; Traefik basic-auth fronts the UI instead.
       # Usersfile is gitignored (traefik/users/), included in the Restic set.

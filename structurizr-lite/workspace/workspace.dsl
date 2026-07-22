@@ -53,7 +53,6 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
                 z2mFrontend = component "Frontend" "Device pairing and network management UI." "Web UI"
             }
             mosquitto = container "Mosquitto" "Local MQTT broker for Zigbee2MQTT and Home Assistant." "MQTT"
-            structurizr = container "Structurizr Lite" "Legacy single-workspace viewer (retires after Server handover)." "Java"
             structurizrServer = container "Structurizr Server" "Multi-workspace C4 publisher, open core built from source (ADR 0014); behind Traefik basicAuth." "Java" {
                 workspacesApi = component "Workspace pages" "Dashboard, diagram viewer/editor, inspections." "Spring MVC"
                 fileStorage = component "File storage" "Workspace JSON, properties, and thumbnails in the data directory." "Filesystem"
@@ -111,7 +110,6 @@ workspace "Bumblebeam home infrastructure" "Architecture of the Bumblebeam host 
         bumblebeam.traefik -> bumblebeam.audiobookshelf "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.n8n "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.seerr "Routes to" "HTTP"
-        bumblebeam.traefik -> bumblebeam.structurizr "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.structurizrServer "Routes (behind BasicAuth) to" "HTTP"
         bumblebeam.traefik -> bumblebeam.video "Routes to" "HTTP"
         bumblebeam.traefik -> bumblebeam.openspeedtest "Routes to" "HTTP"
