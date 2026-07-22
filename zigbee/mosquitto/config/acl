@@ -9,6 +9,8 @@ topic readwrite zigbee2mqtt/#
 user hass
 topic readwrite #
 
-# Ultra-Magners (Windows PC) focus agent: read-only on the focus topic, nothing else.
+# Ultra-Magners (Windows PC) DND agent: read-only on the DND topics. The legacy
+# topic is retained temporarily while the agent is migrated.
 user ultra-magners
 topic read focus/#
+topic read pomodoro/dnd/#

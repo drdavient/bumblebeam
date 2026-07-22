@@ -2,7 +2,7 @@
 # Loads default set of integrations. Do not remove.
 default_config:
 
-# Modular config (Pomodoro focus routine, etc.)
+# Modular config (Pomodoro DND routine, etc.)
 homeassistant:
   packages: !include_dir_named packages
 

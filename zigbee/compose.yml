@@ -45,6 +45,6 @@ networks:
     external: true
 
 volumes:
-  # Persist retained MQTT messages (e.g. focus/state) across broker restarts, so
-  # the Windows agent self-syncs on connect.
+  # Persist retained MQTT messages (e.g. pomodoro/dnd/state) across broker
+  # restarts, so the Windows DND agent self-syncs on connect.
   mosquitto-data:

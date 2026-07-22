@@ -1,8 +1,8 @@
-# Pomodoro cube -> focus state -> Android DND + Windows agent.
+# Pomodoro cube -> DND state -> Android DND + Windows DND agent.
 # Cube-face mapping validated in docs/adr/0006; routine design in docs/adr/0008.
 # Classification uses the dominant gravity axis (see the validated signatures):
 #   +X=25  -X=5  +Y=50  -Y=10  +Z=down  -Z=up
-# Focus is ON while a numbered face (5/10/25/50) is up. No extra debounce:
+# DND is ON while a numbered face (5/10/25/50) is up. No extra debounce:
 # the DJT11LM firmware only reports an orientation once it judges the cube
 # settled, so we trust that. If a fast 25<->5 flip ever flickers focus off,
 # restore `delay_off: "0:0:0.25"` on the binary sensor.
@@ -17,8 +17,8 @@ mqtt:
         {% set x = value_json.x_axis | float(0) %}{% set y = value_json.y_axis | float(0) %}{% set z = value_json.z_axis | float(0) %}{% set ax = x|abs %}{% set ay = y|abs %}{% set az = z|abs %}{{ ('25' if x>0 else '5') if (ax>=ay and ax>=az) else ('50' if y>0 else '10') if (ay>=az) else ('down' if z>0 else 'up') }}
 
 input_select:
-  focus_dnd_level:
-    name: Focus DND level
+  pomodoro_dnd_level:
+    name: Pomodoro DND level
     options:
       - priority_only
       - alarms_only
@@ -28,7 +28,7 @@ input_select:
 
 template:
   - binary_sensor:
-      - name: "Focus state"
-        unique_id: focus_state
+      - name: "Pomodoro DND state"
+        unique_id: pomodoro_dnd_state
         icon: mdi:brain
         state: "{{ states('sensor.pomodoro_cube_face') in ['5','10','25','50'] }}"

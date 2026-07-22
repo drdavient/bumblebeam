@@ -1,31 +1,36 @@
-- id: pomodoro_focus_fanout
-  alias: Pomodoro focus fan-out
+- id: pomodoro_dnd_fanout
+  alias: Pomodoro DND fan-out
   description: >-
-    Mirror focus_state to Android DND (level from focus_dnd_level) and a retained
-    focus/state topic for the Windows agent. Fires on focus_state change and on HA
-    start, so the retained topic is always populated (self-sync after any restart).
+    Mirror pomodoro_dnd_state to Android DND (level from pomodoro_dnd_level) and
+    retained MQTT state for the Windows DND agent. The legacy focus/state topic is
+    dual-published temporarily while Windows clients migrate to pomodoro/dnd/state.
   mode: queued
   trigger:
     - platform: state
-      entity_id: binary_sensor.focus_state
+      entity_id: binary_sensor.pomodoro_dnd_state
     - platform: homeassistant
       event: start
   variables:
-    focus: "{{ states('binary_sensor.focus_state') }}"
+    dnd: "{{ states('binary_sensor.pomodoro_dnd_state') }}"
   condition:
     - condition: template
-      value_template: "{{ focus in ['on', 'off'] }}"
+      value_template: "{{ dnd in ['on', 'off'] }}"
   action:
     - choose:
         - conditions:
             - condition: template
-              value_template: "{{ focus == 'on' }}"
+              value_template: "{{ dnd == 'on' }}"
           sequence:
             - service: notify.mobile_app_samsung_s25_ultra
               data:
                 message: command_dnd
                 data:
-                  command: "{{ states('input_select.focus_dnd_level') }}"
+                  command: "{{ states('input_select.pomodoro_dnd_level') }}"
+            - service: mqtt.publish
+              data:
+                topic: pomodoro/dnd/state
+                payload: "on"
+                retain: true
             - service: mqtt.publish
               data:
                 topic: focus/state
@@ -37,6 +42,11 @@
             message: command_dnd
             data:
               command: "off"
+        - service: mqtt.publish
+          data:
+            topic: pomodoro/dnd/state
+            payload: "off"
+            retain: true
         - service: mqtt.publish
           data:
             topic: focus/state
