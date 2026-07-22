@@ -32,3 +32,6 @@ nominal face duration or treat DND as a source of timer state.
 Tracker design and its implementation plan are owned by the separate
 [`pomodoro-tracker`](https://github.com/drdavient/pomodoro-tracker) repository;
 see its [boundary ADR](https://github.com/drdavient/pomodoro-tracker/blob/main/docs/adr/0001-tracker-boundary-and-external-timer-authority.md).
+
+The Windows client's local ownership and implementation boundary are recorded in
+the [Windows DND agent ADR](https://github.com/drdavient/windows-dnd-agent/blob/main/docs/adr/0001-dnd-agent-boundary.md).
