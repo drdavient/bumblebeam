@@ -12,6 +12,18 @@ RUN git clone https://github.com/structurizr/structurizr.git /src \
 WORKDIR /src
 RUN ./mvnw -q -DskipTests package
 
+# One-shot renderer for publish-time PNG/thumbnail export (needs a browser).
+# Never runs as a service — publish.sh invokes it and it exits. Upstream's own
+# Playwright base pin.
+FROM mcr.microsoft.com/playwright/java:v1.59.0-noble AS renderer
+ENV PORT=8080
+COPY --from=build /src/structurizr-application/target/structurizr-*.war /usr/local/structurizr.war
+COPY --from=build /src/structurizr-themes /usr/local/structurizr-themes
+COPY --from=build /src/structurizr-application/Dockerfiles/structurizr.sh /usr/local/structurizr.sh
+RUN chmod +x /usr/local/structurizr.sh
+WORKDIR /usr/local/structurizr
+ENTRYPOINT ["/usr/local/structurizr.sh"]
+
 FROM eclipse-temurin:21-jre-noble
 ENV PORT=8080
 COPY --from=build /src/structurizr-application/target/structurizr-*.war /usr/local/structurizr.war

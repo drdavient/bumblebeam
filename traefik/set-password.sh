@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Set/replace a basic-auth user for the Structurizr Server route (ADR 0014).
+# Set/replace a basic-auth user for the Structurizr Server route (ADR 0015).
 # Prompts silently (nothing echoes, nothing lands in argv/history/logs), hashes
 # with APR1, and rewrites that user's line in the gitignored usersfile.
 # Traefik loads the usersfile only when the middleware is (re)created, NOT per

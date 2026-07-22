@@ -1,4 +1,4 @@
-# ADR 0014: Structurizr Server — open core built from source
+# ADR 0015: Structurizr Server — open core built from source
 
 - Status: accepted
 - Date: 2026-07-22

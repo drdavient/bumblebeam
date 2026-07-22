@@ -30,6 +30,15 @@ services:
       traefik.http.services.structurizr-server.loadbalancer.server.port: "8080"
     restart: unless-stopped
 
+  # Publish-time renderer (Playwright browser for PNG/thumbnail export).
+  # profiles: never started by a plain `up`; publish.sh runs it one-shot.
+  structurizr-renderer:
+    build:
+      context: .
+      target: renderer
+    image: bumblebeam/structurizr-renderer:oss-9ff1663
+    profiles: ["render"]
+
 networks:
   traefik-net:
     external: true
