@@ -36,9 +36,14 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-# Touch the path so systemd automount mounts an inserted card, then verify.
-ls "$MOUNT" >/dev/null 2>&1 || true
-mountpoint -q "$MOUNT" || die "no SD card mounted at $MOUNT"
+# Touch the path so systemd automount mounts an inserted card. Retry for up to
+# 30s: when udev triggers us on insertion, the partition may not be ready yet.
+for _ in $(seq 1 15); do
+  ls "$MOUNT" >/dev/null 2>&1 || true
+  mountpoint -q "$MOUNT" && break
+  sleep 2
+done
+mountpoint -q "$MOUNT" || die "no SD card mounted at $MOUNT (waited 30s)"
 
 if [ -n "$INIT" ]; then
   echo "$INIT" > "$MOUNT/$MARKER"
