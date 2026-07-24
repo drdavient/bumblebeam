@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync Plex "SD Card" collection to the inserted SD card
+# Triggered by udev on SD card insertion (see ../udev/99-sdcard-sync.rules).
+# Also safe to run manually: systemctl start sdcard-sync
+
+[Service]
+Type=oneshot
+User=drdavient
+ExecStart=/home/drdavient/docker/ops/sdcard/sync-sdcard.sh
+# Large copies can take a while at SD write speeds
+TimeoutStartSec=2h
