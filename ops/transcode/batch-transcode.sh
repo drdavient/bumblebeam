@@ -46,15 +46,17 @@ transcode_one() {
   # Size calibration (2026-07): library norm is ~2 Mbps / 1.2-1.8G per film
   # (cf. Toy Story 3). CRF alone preserves source grain and can triple that, so
   # every encode gets light temporal denoise plus a 3.5 Mbps ceiling.
-  local dn="hqdn3d=1.5:1.5:6:6"; crf=22
+  # MAXW overrides the width ceiling per run (e.g. MAXW=1280 for SD-upscale
+  # sources where 720p loses nothing real).
+  local dn="hqdn3d=1.5:1.5:6:6" maxw="${MAXW:-1920}"; crf=22
   if [ "$transfer" = "smpte2084" ] || [ "$transfer" = "arib-std-b67" ]; then
-    if [ "${width:-0}" -gt 1920 ]; then
-      vf="zscale=w=1920:h=-2:t=linear:npl=100,tonemap=hable,zscale=p=bt709:t=bt709:m=bt709:r=tv,$dn,format=yuv420p"
+    if [ "${width:-0}" -gt "$maxw" ]; then
+      vf="zscale=w=$maxw:h=-2:t=linear:npl=100,tonemap=hable,zscale=p=bt709:t=bt709:m=bt709:r=tv,$dn,format=yuv420p"
     else
       vf="zscale=t=linear:npl=100,tonemap=hable,zscale=p=bt709:t=bt709:m=bt709:r=tv,$dn,format=yuv420p"
     fi
-  elif [ "${width:-0}" -gt 1920 ]; then
-    vf="scale=1920:-2,$dn,format=yuv420p"
+  elif [ "${width:-0}" -gt "$maxw" ]; then
+    vf="scale=$maxw:-2,$dn,format=yuv420p"
   else
     vf="$dn,format=yuv420p"
   fi
