@@ -43,16 +43,20 @@ transcode_one() {
   height=$(jq -r '[.streams[]|select(.codec_type=="video")][0].height' <<<"$probe")
   transfer=$(jq -r '[.streams[]|select(.codec_type=="video")][0].color_transfer // ""' <<<"$probe")
 
+  # Size calibration (2026-07): library norm is ~2 Mbps / 1.2-1.8G per film
+  # (cf. Toy Story 3). CRF alone preserves source grain and can triple that, so
+  # every encode gets light temporal denoise plus a 3.5 Mbps ceiling.
+  local dn="hqdn3d=1.5:1.5:6:6"; crf=22
   if [ "$transfer" = "smpte2084" ] || [ "$transfer" = "arib-std-b67" ]; then
     if [ "${width:-0}" -gt 1920 ]; then
-      vf="zscale=w=1920:h=-2:t=linear:npl=100,tonemap=hable,zscale=p=bt709:t=bt709:m=bt709:r=tv,format=yuv420p"; crf=19
+      vf="zscale=w=1920:h=-2:t=linear:npl=100,tonemap=hable,zscale=p=bt709:t=bt709:m=bt709:r=tv,$dn,format=yuv420p"
     else
-      vf="zscale=t=linear:npl=100,tonemap=hable,zscale=p=bt709:t=bt709:m=bt709:r=tv,format=yuv420p"; crf=20
+      vf="zscale=t=linear:npl=100,tonemap=hable,zscale=p=bt709:t=bt709:m=bt709:r=tv,$dn,format=yuv420p"
     fi
   elif [ "${width:-0}" -gt 1920 ]; then
-    vf="scale=1920:-2,format=yuv420p"; crf=19
+    vf="scale=1920:-2,$dn,format=yuv420p"
   else
-    vf="format=yuv420p"; crf=20
+    vf="$dn,format=yuv420p"
   fi
 
   # audio: English streams, else first; build -map/-c:a args per stream
@@ -81,7 +85,7 @@ transcode_one() {
   log "START ($(du -h "$in" | cut -f1), ${width}x${height}, tf=${transfer:-sdr}, crf=$crf): $in"
   rm -f -- "$out"
   nice -n 15 ffmpeg -y -nostdin -v error -i "$in" \
-    -map 0:v:0 -c:v libx264 -crf "$crf" -preset fast -vf "$vf" \
+    -map 0:v:0 -c:v libx264 -crf "$crf" -preset fast -maxrate 3500k -bufsize 7000k -vf "$vf" \
     "${amaps[@]}" "${acodecs[@]}" \
     ${smaps[0]+"${smaps[@]}"} ${scodecs[0]+"${scodecs[@]}"} \
     "$out" 2>> "$LOG"
