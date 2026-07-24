@@ -16,6 +16,7 @@
 | App shelf `apks/*.apk` (owner-supplied, e.g. owned games) + Filebrowser DB | Stateful/bulk application data | No | Yes | Owner-supplied purchases; never fetched from mirrors, never committed |
 | Logs, caches, thumbnails, transcodes, archives | Excluded/reproducible | No | No | Regenerated or low recovery value |
 | Downloads and media libraries (`/mnt/Elements/media/`; legacy `/mnt/Elements/Video`, `Music`) | Bulk media | No | No | Separate accepted risk/workstream; migrate by the staged plan in ADR 0010 |
+| Removable SD card (`/mnt/sdcard`) | Transient removable media | No | No | systemd automount via `/etc/fstab` (`nofail`, uid/gid 1000, 60 s idle unmount); first partition of any card in the reader (`/dev/mmcblk0p1`) mounts on access |
 | Restic repository internals | Encrypted backup state | No | N/A | Access only through Restic |
 
 Before staging, run `git status --short --ignored` and the secret-location audit in
