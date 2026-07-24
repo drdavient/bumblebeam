@@ -23,7 +23,9 @@ services:
       - ./zigbee2mqtt/data:/app/data
       - /run/udev:/run/udev:ro
     devices:
-      # SONOFF ZBDongle-E (EFR32MG21), stable by-id path -> /dev/ttyUSB0 in-container
+      # SONOFF ZBDongle-E (EFR32MG21), stable by-id path -> /dev/ttyUSB0 in-container.
+      # Port-independent across container starts; live replug recovery relies on the
+      # host-installed udev rule in ./udev/99-zigbee-dongle-replug.rules.
       - "/dev/serial/by-id/usb-Itead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_V2_6cc3bde8ecf0ef118ff6c10a6d9880ab-if00-port0:/dev/ttyUSB0"
     environment:
       - TZ=Europe/London

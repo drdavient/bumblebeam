@@ -56,3 +56,16 @@ sign → one of ±X/±Y/±Z) classifies all six.
   mapping** (a product decision), the **Home Assistant MQTT wiring** (with broker auth),
   and the **Windows focus-state control mechanism**. Per the project handover, the Windows
   automation is explicitly the last phase.
+
+## Amendment 2026-07-24: dongle replug resilience
+
+A live unplug/replug of the dongle (into a different USB port) exposed a gap: the
+`/dev/serial/by-id` device mapping makes the port irrelevant *across container starts*,
+but on unplug Z2M loses its serial fd and exits, and if Docker's `unless-stopped`
+restart fires while the by-id path is absent, the start fails (`error gathering device
+information … no such file or directory`) and Docker **gives up permanently** — the
+replug never self-heals. Fix: a host-installed udev rule
+(`zigbee/udev/99-zigbee-dongle-replug.rules`, matched on the dongle's USB serial) runs
+`docker restart zigbee2mqtt` whenever the dongle enumerates on any port, which also
+starts the container from the exited state. The Zigbee network survives such events
+without re-pairing (coordinator state matched config on resume).

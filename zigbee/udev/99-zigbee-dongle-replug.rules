@@ -1,0 +1,14 @@
+# SONOFF ZBDongle-E (Silicon Labs CP210x, serial 6cc3bde8ecf0ef118ff6c10a6d9880ab).
+#
+# The compose device mapping uses the stable /dev/serial/by-id path, so the dongle
+# is port-independent across container starts. But if Docker's restart policy fires
+# while the dongle is unplugged, the start fails ("error gathering device
+# information ... no such file or directory") and Docker gives up permanently —
+# a replug never self-heals on its own (observed 2026-07-24). This rule closes that
+# gap: whenever this dongle enumerates on any USB port, restart zigbee2mqtt.
+# `docker restart` also starts the container if it is currently exited.
+#
+# Install (host state, not applied by Git):
+#   sudo install -m 644 zigbee/udev/99-zigbee-dongle-replug.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload
+ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{serial}=="6cc3bde8ecf0ef118ff6c10a6d9880ab", RUN+="/usr/bin/systemd-run --no-block --collect --unit=zigbee2mqtt-replug /usr/bin/docker restart zigbee2mqtt"
