@@ -7,8 +7,15 @@
 # marker file stamped at first use (--init N), so plain `sync-sdcard.sh` always
 # syncs the right content for whichever card is inserted.
 #
-# Deletion is scoped: only files under the top-level directories the manifest
-# uses (Movies/, TV/) are ever removed, so anything else on the card is safe.
+# Files are laid out on the card under PRETTY names built from Plex metadata —
+#   Movies/Cars (2006).mkv
+#   TV/Bluey/Season 01/Bluey - S01E01 - Magic Xylophone.mkv
+# — so a plain file browser (e.g. VLC on a tablet) reads like a shelf. Episodes
+# Plex couldn't parse (index 0/duplicated) fall back to their original basename
+# inside the show folder. A card synced under the old source-name layout is
+# migrated by renaming in place (size-matched), not recopied.
+#
+# Deletion is scoped to Movies/ and TV/, so anything else on the card is safe.
 #
 # Usage:
 #   sync-sdcard.sh              sync the inserted card per its marker
@@ -25,6 +32,7 @@ MARKER=".sdcard-id"
 MANIFEST="sdcard-manifest.txt"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
+san() { printf '%s' "$1" | tr '\\/:*?"<>|' '-' | sed 's/[. ]*$//'; }  # exFAT-safe
 
 DRY=0 INIT=""
 while [ $# -gt 0 ]; do
@@ -36,6 +44,10 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# Never run two syncs at once (e.g. udev firing on a reinsertion mid-sync).
+exec 9>/tmp/sdcard-sync.lock
+flock -n 9 || die "another sync is already running"
+
 # Touch the path so systemd automount mounts an inserted card. Retry for up to
 # 30s: when udev triggers us on insertion, the partition may not be ready yet.
 for _ in $(seq 1 15); do
@@ -45,7 +57,7 @@ for _ in $(seq 1 15); do
 done
 mountpoint -q "$MOUNT" || die "no SD card mounted at $MOUNT (waited 30s)"
 
-if [ -n "$INIT" ]; then
+if [ -n "$INIT" ] && [ "$DRY" -eq 0 ]; then
   echo "$INIT" > "$MOUNT/$MARKER"
 fi
 [ -f "$MOUNT/$MARKER" ] || die "card has no $MARKER — run with --init <1|2> to stamp it"
@@ -61,57 +73,112 @@ plex() {  # GET a Plex API path; the token stays out of argv and logs
 }
 
 WORK=$(mktemp -d); trap 'rm -rf "$WORK"' EXIT
-: > "$WORK/files"
+: > "$WORK/map"   # lines: dest<TAB>source-path-relative-to-$SRC
+declare -A SEEN
+
+emit() { # <dest> <container-file-path>  (falls back on collisions/bad paths)
+  local dest="$1" f="$2" rel
+  rel="${f#/media/}"
+  if [ "$rel" = "$f" ]; then echo "WARN: non-/media path skipped: $f" >&2; return; fi
+  if [ ! -f "$SRC/$rel" ]; then echo "WARN: missing on host, skipped: $rel" >&2; return; fi
+  if [ -n "${SEEN[$dest]:-}" ]; then dest="${dest%/*}/$(basename "$rel")"; fi
+  if [ -n "${SEEN[$dest]:-}" ]; then echo "WARN: duplicate dest skipped: $dest" >&2; return; fi
+  SEEN[$dest]=1
+  printf '%s\t%s\n' "$dest" "$rel" >> "$WORK/map"
+}
 
 found=0
 for sec in $(plex /library/sections | jq -r '.MediaContainer.Directory[] | select(.type=="movie" or .type=="show") | .key'); do
   for col in $(plex "/library/sections/$sec/collections" | jq -r --arg t "$COLLECTION" '.MediaContainer.Metadata[]? | select(.title==$t) | .ratingKey'); do
     found=1
-    plex "/library/collections/$col/children" | jq -r '.MediaContainer.Metadata[]? | "\(.ratingKey)\t\(.type)"' > "$WORK/children"
-    while IFS=$'\t' read -r rk type; do
+    plex "/library/collections/$col/children" \
+      | jq -r '.MediaContainer.Metadata[]? | [.ratingKey, .type, (.title//"Unknown"), (.year//"" | tostring), (.parentTitle//"")] | @tsv' > "$WORK/children"
+    while IFS=$'\t' read -r rk type title year ptitle; do
       case "$type" in
-        movie|episode) plex "/library/metadata/$rk" | jq -r '.MediaContainer.Metadata[].Media[]?.Part[]?.file // empty' ;;
-        show|season)   plex "/library/metadata/$rk/allLeaves" | jq -r '.MediaContainer.Metadata[]?.Media[]?.Part[]?.file // empty' ;;
+        movie)
+          local_title=$(san "$title"); [ -n "$year" ] && local_title="$local_title ($year)"
+          n=0
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            n=$((n+1)); ext="${f##*.}"
+            suffix=""; [ "$n" -gt 1 ] && suffix=" - pt$n"
+            emit "Movies/$local_title$suffix.$ext" "$f"
+          done < <(plex "/library/metadata/$rk" | jq -r '.MediaContainer.Metadata[].Media[]?.Part[]?.file // empty')
+          ;;
+        show)
+          show=$(san "$title")
+          while IFS=$'\t' read -r snum enum etitle f; do
+            [ -n "$f" ] || continue
+            ext="${f##*.}"
+            if [ "${enum:-0}" -gt 0 ] 2>/dev/null; then
+              ep=$(printf 'S%02dE%02d' "$snum" "$enum")
+              name="$show - $ep"; [ -n "$etitle" ] && name="$name - $(san "$etitle")"
+              emit "TV/$show/Season $(printf '%02d' "$snum")/$name.$ext" "$f"
+            else
+              emit "TV/$show/$(basename "$f")" "$f"
+            fi
+          done < <(plex "/library/metadata/$rk/allLeaves" \
+            | jq -r '.MediaContainer.Metadata[]? | . as $m | $m.Media[]?.Part[]? | [($m.parentIndex//0), ($m.index//0), ($m.title//""), .file] | @tsv')
+          ;;
+        season)  # a single season added to the collection; episodes are its children
+          show=$(san "${ptitle:-$title}")
+          while IFS=$'\t' read -r snum enum etitle f; do
+            [ -n "$f" ] || continue
+            ext="${f##*.}"
+            if [ "${enum:-0}" -gt 0 ] 2>/dev/null; then
+              ep=$(printf 'S%02dE%02d' "$snum" "$enum")
+              name="$show - $ep"; [ -n "$etitle" ] && name="$name - $(san "$etitle")"
+              emit "TV/$show/Season $(printf '%02d' "$snum")/$name.$ext" "$f"
+            else
+              emit "TV/$show/$(basename "$f")" "$f"
+            fi
+          done < <(plex "/library/metadata/$rk/children" \
+            | jq -r '.MediaContainer.Metadata[]? | . as $m | $m.Media[]?.Part[]? | [($m.parentIndex//0), ($m.index//0), ($m.title//""), .file] | @tsv')
+          ;;
       esac
-    done < "$WORK/children" >> "$WORK/files"
+    done < "$WORK/children"
   done
 done
 [ "$found" -eq 1 ] || die "no collection named '$COLLECTION' in Plex — create it and add items"
 
-# Container path /media/... -> path relative to $SRC on the host.
-sort -u "$WORK/files" | while read -r f; do
-  rel="${f#/media/}"
-  if [ "$rel" = "$f" ]; then echo "WARN: skipping non-/media path: $f" >&2; continue; fi
-  if [ ! -f "$SRC/$rel" ]; then echo "WARN: missing on host, skipping: $rel" >&2; continue; fi
-  echo "$rel"
-done > "$WORK/manifest"
-COUNT=$(wc -l < "$WORK/manifest")
+COUNT=$(wc -l < "$WORK/map")
 [ "$COUNT" -gt 0 ] || die "collection '$COLLECTION' resolved to zero files"
-TOTAL=$(cd "$SRC" && tr '\n' '\0' < "$WORK/manifest" | du -ch --files0-from=- 2>/dev/null | tail -1 | cut -f1)
+TOTAL=$(cd "$SRC" && cut -f2 "$WORK/map" | tr '\n' '\0' | du -ch --files0-from=- 2>/dev/null | tail -1 | cut -f1)
 echo "$COUNT files, $TOTAL total"
 
-RSYNC_FLAGS=(-rt --modify-window=2 --partial --files-from="$WORK/manifest")
-[ "$DRY" -eq 1 ] && RSYNC_FLAGS+=(--dry-run -v)
-rsync "${RSYNC_FLAGS[@]}" "$SRC/" "$MOUNT/"
+copied=0 renamed=0
+while IFS=$'\t' read -r dest rel; do
+  s="$SRC/$rel"; d="$MOUNT/$dest"
+  ssz=$(stat -c%s "$s")
+  [ -f "$d" ] && [ "$(stat -c%s "$d")" = "$ssz" ] && continue
+  legacy="$MOUNT/$rel"
+  if [ "$legacy" != "$d" ] && [ -f "$legacy" ] && [ "$(stat -c%s "$legacy")" = "$ssz" ]; then
+    echo "rename: $rel -> $dest"
+    if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$d")"; mv -- "$legacy" "$d"; fi
+    renamed=$((renamed+1)); continue
+  fi
+  echo "copy:   $dest"
+  if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$d")"; rsync -t --partial "$s" "$d"; fi
+  copied=$((copied+1))
+done < "$WORK/map"
 
-# Remove card files the manifest no longer lists (scoped to manifest top dirs).
-sort "$WORK/manifest" > "$WORK/sorted"
-cut -d/ -f1 "$WORK/manifest" | sort -u | while read -r top; do
-  [ -d "$MOUNT/$top" ] || continue
-  (cd "$MOUNT" && find "$top" -type f)
-done | sort > "$WORK/oncard"
-comm -23 "$WORK/oncard" "$WORK/sorted" > "$WORK/stale"
+# Remove card files (within Movies/ and TV/) that the manifest no longer lists.
+cut -f1 "$WORK/map" | sort > "$WORK/want"
+for top in Movies TV; do
+  [ -d "$MOUNT/$top" ] && (cd "$MOUNT" && find "$top" -type f)
+done | sort | comm -23 - "$WORK/want" > "$WORK/stale"
 if [ -s "$WORK/stale" ]; then
-  echo "Removing $(wc -l < "$WORK/stale") file(s) no longer in the collection:"
+  echo "Removing $(wc -l < "$WORK/stale") stale file(s):"
   sed 's/^/  - /' "$WORK/stale"
   if [ "$DRY" -eq 0 ]; then
-    while read -r f; do rm -f -- "$MOUNT/$f"; done < "$WORK/stale"
+    while IFS= read -r f; do rm -f -- "$MOUNT/$f"; done < "$WORK/stale"
     find "$MOUNT" -mindepth 1 -type d -empty -delete
   fi
 fi
 
+echo "copied $copied, renamed $renamed, $(wc -l < "$WORK/stale") removed"
 if [ "$DRY" -eq 0 ]; then
-  cp "$WORK/manifest" "$MOUNT/$MANIFEST"
+  cut -f1 "$WORK/map" > "$MOUNT/$MANIFEST"
   sync
 fi
 df -h "$MOUNT" | tail -1 | awk '{print "Card usage: "$3" used, "$4" free ("$5")"}'
