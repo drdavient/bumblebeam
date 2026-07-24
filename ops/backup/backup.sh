@@ -93,7 +93,7 @@ if [[ ! -f "$LOCAL_REPOSITORY/config" ]]; then
 fi
 
 running_containers=()
-stateful_containers=(deluge radarr sonarr prowlarr shelfarr audiobookshelf n8n homeassistant plex structurizr-server traefik)
+stateful_containers=(deluge radarr sonarr prowlarr shelfarr audiobookshelf n8n homeassistant plex structurizr-server traefik zigbee2mqtt)
 restart_containers() {
   if ((${#running_containers[@]})); then
     log "restarting previously running containers: ${running_containers[*]}"
@@ -138,6 +138,9 @@ paths=(
   "$ROOT_DIR/pla-util"
   "$ROOT_DIR/structurizr-lite"
   "$ROOT_DIR/structurizr-server"
+  "$ROOT_DIR/zigbee"
+  "$ROOT_DIR/video"
+  "$ROOT_DIR/openspeedtest"
   "$ROOT_DIR/plex/compose.yml"
   "$ROOT_DIR/plex/split_multi.sh"
   "$ROOT_DIR/plex/mergeParts.sh"

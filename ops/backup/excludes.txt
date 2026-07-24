@@ -8,6 +8,11 @@
 **/ops/backup/*.password
 **/ops/backup/*.password-file
 
+# Root-owned and unreadable by the backup user; the hashes are regenerable with
+# mosquitto_passwd from the client-side plaintext credentials that ARE backed up
+# (Z2M's configuration.yaml, HA's .storage) plus the Windows agent's own copy
+**/mosquitto/config/passwd
+
 # Logs, crash data, temporary data, and archives
 **/*.log
 **/*.log.*

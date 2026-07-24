@@ -11,6 +11,9 @@
 | Plex databases and `Preferences.xml` | Stateful application data | No | Yes | Metadata/art/cache are excluded |
 | Radarr/Sonarr/Prowlarr/Deluge/Gluetun/Shelfarr/Audiobookshelf config | Stateful application data | No | Yes | Logs, archives, cache excluded |
 | Traefik `acme.json` | Certificate/account state | No | Yes | Must remain mode 600 |
+| Zigbee2MQTT runtime (`zigbee/zigbee2mqtt/data/`: `configuration.yaml` with network key, `database.db`, `coordinator_backup.json`) | Stateful application data | No | Yes | Losing it loses the Zigbee network identity — every device must re-pair; consistent snapshot preferred |
+| Mosquitto retained messages (`zigbee_mosquitto-data` named volume) | Excluded/reproducible | No | No | Retained topics (e.g. `pomodoro/dnd/state`) regenerate on the next state change |
+| Mosquitto `config/passwd` (hashed broker credentials) | Excluded/reproducible | No | No | Root-owned; regenerate with `mosquitto_passwd` from client plaintext credentials, which are in the backup (Z2M `configuration.yaml`, HA `.storage`) or on the client (Windows agent) |
 | App shelf catalog app + `catalog.json` + `fetch-seed-apks.sh` | Declarative configuration | Yes | Yes | Seed APK set is reproducible from the fetch script |
 | App shelf `apks/*.apk` (seed) | Excluded/reproducible | No | Yes | Re-downloadable via `fetch-seed-apks.sh` (SHA-256 pinned) |
 | App shelf `apks/*.apk` (owner-supplied, e.g. owned games) + Filebrowser DB | Stateful/bulk application data | No | Yes | Owner-supplied purchases; never fetched from mirrors, never committed |
