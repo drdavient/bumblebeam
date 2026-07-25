@@ -146,13 +146,22 @@ COUNT=$(wc -l < "$WORK/map")
 TOTAL=$(cd "$SRC" && cut -f2 "$WORK/map" | tr '\n' '\0' | du -ch --files0-from=- 2>/dev/null | tail -1 | cut -f1)
 echo "$COUNT files, $TOTAL total"
 
+get_art_jpg() { # <plex art path> -> cached jpg path on stdout ('' on failure)
+  local jpg="$WORK/art/$(printf '%s' "$1" | md5sum | cut -d' ' -f1).jpg"
+  [ -s "$jpg" ] || plex_img "$1" "$jpg" || { rm -f "$jpg"; echo ""; return 0; }
+  echo "$jpg"
+}
+
+embeddable() { case "${1,,}" in mp4|m4v|mov|mkv) return 0 ;; *) return 1 ;; esac; }
+
 copied=0 renamed=0
 while IFS=$'\t' read -r dest rel art; do
   s="$SRC/$rel"; d="$MOUNT/$dest"
   ssz=$(stat -c%s "$s")
   if [ -f "$d" ]; then
     dsz=$(stat -c%s "$d")
-    [ "$dsz" -ge "$ssz" ] && [ $((dsz - ssz)) -lt "$ART_SLACK" ] && continue
+    diff=$((dsz - ssz)); [ "$diff" -lt 0 ] && diff=$((-diff))
+    [ "$diff" -lt "$ART_SLACK" ] && continue
   fi
   legacy="$MOUNT/$rel"
   if [ "$legacy" != "$d" ] && [ -f "$legacy" ] && [ "$(stat -c%s "$legacy")" = "$ssz" ]; then
@@ -160,8 +169,30 @@ while IFS=$'\t' read -r dest rel art; do
     if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$d")"; mv -- "$legacy" "$d"; fi
     renamed=$((renamed+1)); continue
   fi
-  echo "copy:   $dest"
-  if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$d")"; rsync -t --partial "$s" "$d"; fi
+  # Copy — embedding the art during the copy itself when possible, so new
+  # files never need a second rewrite on the card.
+  ext="${dest##*.}"; jpg=""
+  [ -n "$art" ] && embeddable "$ext" && jpg=$(get_art_jpg "$art")
+  if [ -n "$jpg" ]; then
+    echo "copy+art: $dest"
+    if [ "$DRY" -eq 0 ]; then
+      mkdir -p "$(dirname "$d")"; tmp="$(dirname "$d")/.copy-tmp.${ext,,}"
+      ok=0
+      case "${ext,,}" in
+        mkv) ffmpeg -y -nostdin -v error -i "$s" -c copy -map 0 \
+               -attach "$jpg" -metadata:s:t mimetype=image/jpeg -metadata:s:t filename=cover.jpg "$tmp" && ok=1 || true ;;
+        *)   ffmpeg -y -nostdin -v error -i "$s" -i "$jpg" -map 0 -map 1:0 -c copy \
+               -disposition:v:1 attached_pic "$tmp" && ok=1 || true ;;
+      esac
+      if [ "$ok" -eq 1 ] && [ -s "$tmp" ]; then mv -- "$tmp" "$d"; else
+        rm -f -- "$tmp"; echo "WARN: embed-copy failed, plain copy: $dest" >&2
+        rsync -t --partial "$s" "$d"
+      fi
+    fi
+  else
+    echo "copy:   $dest"
+    if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$d")"; rsync -t --partial "$s" "$d"; fi
+  fi
   copied=$((copied+1))
 done < "$WORK/map"
 
@@ -174,13 +205,11 @@ arted=0
 while IFS=$'\t' read -r dest rel art; do
   [ -n "$art" ] || continue
   d="$MOUNT/$dest"; ext="${dest##*.}"
-  case "${ext,,}" in mp4|m4v|mov|mkv) ;; *) continue ;; esac
+  embeddable "$ext" || continue
   [ -f "$d" ] || continue
   has_art "$d" && continue
-  jpg="$WORK/art/$(printf '%s' "$art" | md5sum | cut -d' ' -f1).jpg"
-  if [ ! -s "$jpg" ]; then
-    plex_img "$art" "$jpg" || { echo "WARN: art fetch failed: $dest" >&2; continue; }
-  fi
+  jpg=$(get_art_jpg "$art")
+  [ -n "$jpg" ] || { echo "WARN: art fetch failed: $dest" >&2; continue; }
   echo "art:    $dest"
   [ "$DRY" -eq 1 ] && { arted=$((arted+1)); continue; }
   tmp="$(dirname "$d")/.art-tmp.${ext,,}"
