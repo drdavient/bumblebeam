@@ -1,3 +1,5 @@
 # When an SD card partition appears in the reader, run the Plex collection sync.
 # Install: sudo cp 99-sdcard-sync.rules /etc/udev/rules.d/ && sudo udevadm control --reload
-ACTION=="add", SUBSYSTEM=="block", KERNEL=="mmcblk0p1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="sdcard-sync.service"
+# Reviving the automount on every insertion matters: an unclean card pull kills
+# it, and without it nothing enforces the 60s idle unmount.
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="mmcblk0p1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="mnt-sdcard.automount sdcard-sync.service"
