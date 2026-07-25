@@ -10,10 +10,13 @@
 # Files are laid out on the card under PRETTY names built from Plex metadata —
 #   Movies/Cars (2006).mkv
 #   TV/Bluey/Season 01/Bluey - S01E01 - Magic Xylophone.mkv
-# — so a plain file browser (e.g. VLC on a tablet) reads like a shelf. Episodes
-# Plex couldn't parse (index 0/duplicated) fall back to their original basename
-# inside the show folder. A card synced under the old source-name layout is
-# migrated by renaming in place (size-matched), not recopied.
+# — and each file gets the item's 16:9 Plex background art EMBEDDED (mp4/mov:
+# attached_pic; mkv: cover.jpg attachment) so VLC's library tiles show real
+# artwork instead of frame grabs. Episodes carry their show's backdrop. The
+# copy-check tolerates the small size the art adds, so embedded files are not
+# endlessly recopied. Episodes Plex couldn't parse fall back to their original
+# basename inside the show folder; formats that can't embed art (avi) are
+# synced without it.
 #
 # Deletion is scoped to Movies/ and TV/, so anything else on the card is safe.
 #
@@ -30,6 +33,7 @@ PLEX=http://localhost:32400
 PREFS="/home/drdavient/docker/plex/PMS/Library/Application Support/Plex Media Server/Preferences.xml"
 MARKER=".sdcard-id"
 MANIFEST="sdcard-manifest.txt"
+ART_SLACK=2097152   # embedded art head-room the copy-check tolerates (bytes)
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 san() { printf '%s' "$1" | tr '\\/:*?"<>|' '-' | sed 's/[. ]*$//'; }  # exFAT-safe
@@ -71,20 +75,27 @@ TOKEN=$(sed -n 's/.*PlexOnlineToken="\([^"]*\)".*/\1/p' "$PREFS")
 plex() {  # GET a Plex API path; the token stays out of argv and logs
   curl -sf --max-time 30 -K <(printf 'header = "X-Plex-Token: %s"\nheader = "Accept: application/json"\n' "$TOKEN") "$PLEX$1"
 }
+plex_img() {  # <plex art path> <out.jpg> — fetch 16:9-fitted artwork
+  local enc
+  enc=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$1")
+  curl -sf --max-time 30 -K <(printf 'header = "X-Plex-Token: %s"\n' "$TOKEN") \
+    -o "$2" "$PLEX/photo/:/transcode?width=800&height=450&minSize=1&url=$enc"
+}
 
 WORK=$(mktemp -d); trap 'rm -rf "$WORK"' EXIT
-: > "$WORK/map"   # lines: dest<TAB>source-path-relative-to-$SRC
+mkdir -p "$WORK/art"
+: > "$WORK/map"   # lines: dest<TAB>source-rel-path<TAB>plex-art-path
 declare -A SEEN
 
-emit() { # <dest> <container-file-path>  (falls back on collisions/bad paths)
-  local dest="$1" f="$2" rel
+emit() { # <dest> <container-file-path> <art-path>
+  local dest="$1" f="$2" art="${3:-}" rel
   rel="${f#/media/}"
   if [ "$rel" = "$f" ]; then echo "WARN: non-/media path skipped: $f" >&2; return; fi
   if [ ! -f "$SRC/$rel" ]; then echo "WARN: missing on host, skipped: $rel" >&2; return; fi
   if [ -n "${SEEN[$dest]:-}" ]; then dest="${dest%/*}/$(basename "$rel")"; fi
   if [ -n "${SEEN[$dest]:-}" ]; then echo "WARN: duplicate dest skipped: $dest" >&2; return; fi
   SEEN[$dest]=1
-  printf '%s\t%s\n' "$dest" "$rel" >> "$WORK/map"
+  printf '%s\t%s\t%s\n' "$dest" "$rel" "$art" >> "$WORK/map"
 }
 
 found=0
@@ -96,43 +107,32 @@ for sec in $(plex /library/sections | jq -r '.MediaContainer.Directory[] | selec
     while IFS=$'\t' read -r rk type title year ptitle; do
       case "$type" in
         movie)
+          mjson=$(plex "/library/metadata/$rk")
+          art=$(jq -r '.MediaContainer.Metadata[0] | .art // .thumb // ""' <<<"$mjson")
           local_title=$(san "$title"); [ -n "$year" ] && local_title="$local_title ($year)"
           n=0
           while IFS= read -r f; do
             [ -n "$f" ] || continue
             n=$((n+1)); ext="${f##*.}"
             suffix=""; [ "$n" -gt 1 ] && suffix=" - pt$n"
-            emit "Movies/$local_title$suffix.$ext" "$f"
-          done < <(plex "/library/metadata/$rk" | jq -r '.MediaContainer.Metadata[].Media[]?.Part[]?.file // empty')
+            emit "Movies/$local_title$suffix.$ext" "$f" "$art"
+          done < <(jq -r '.MediaContainer.Metadata[].Media[]?.Part[]?.file // empty' <<<"$mjson")
           ;;
-        show)
-          show=$(san "$title")
+        show|season)
+          show=$(san "${ptitle:-$title}"); [ "$type" = "show" ] && show=$(san "$title")
+          art=$(plex "/library/metadata/$rk" | jq -r '.MediaContainer.Metadata[0] | .art // .grandparentArt // .thumb // ""')
+          leaves="/library/metadata/$rk/allLeaves"; [ "$type" = "season" ] && leaves="/library/metadata/$rk/children"
           while IFS=$'\t' read -r snum enum etitle f; do
             [ -n "$f" ] || continue
             ext="${f##*.}"
             if [ "${enum:-0}" -gt 0 ] 2>/dev/null; then
               ep=$(printf 'S%02dE%02d' "$snum" "$enum")
               name="$show - $ep"; [ -n "$etitle" ] && name="$name - $(san "$etitle")"
-              emit "TV/$show/Season $(printf '%02d' "$snum")/$name.$ext" "$f"
+              emit "TV/$show/Season $(printf '%02d' "$snum")/$name.$ext" "$f" "$art"
             else
-              emit "TV/$show/$(basename "$f")" "$f"
+              emit "TV/$show/$(basename "$f")" "$f" "$art"
             fi
-          done < <(plex "/library/metadata/$rk/allLeaves" \
-            | jq -r '.MediaContainer.Metadata[]? | . as $m | $m.Media[]?.Part[]? | [($m.parentIndex//0), ($m.index//0), ($m.title//""), .file] | @tsv')
-          ;;
-        season)  # a single season added to the collection; episodes are its children
-          show=$(san "${ptitle:-$title}")
-          while IFS=$'\t' read -r snum enum etitle f; do
-            [ -n "$f" ] || continue
-            ext="${f##*.}"
-            if [ "${enum:-0}" -gt 0 ] 2>/dev/null; then
-              ep=$(printf 'S%02dE%02d' "$snum" "$enum")
-              name="$show - $ep"; [ -n "$etitle" ] && name="$name - $(san "$etitle")"
-              emit "TV/$show/Season $(printf '%02d' "$snum")/$name.$ext" "$f"
-            else
-              emit "TV/$show/$(basename "$f")" "$f"
-            fi
-          done < <(plex "/library/metadata/$rk/children" \
+          done < <(plex "$leaves" \
             | jq -r '.MediaContainer.Metadata[]? | . as $m | $m.Media[]?.Part[]? | [($m.parentIndex//0), ($m.index//0), ($m.title//""), .file] | @tsv')
           ;;
       esac
@@ -147,10 +147,13 @@ TOTAL=$(cd "$SRC" && cut -f2 "$WORK/map" | tr '\n' '\0' | du -ch --files0-from=-
 echo "$COUNT files, $TOTAL total"
 
 copied=0 renamed=0
-while IFS=$'\t' read -r dest rel; do
+while IFS=$'\t' read -r dest rel art; do
   s="$SRC/$rel"; d="$MOUNT/$dest"
   ssz=$(stat -c%s "$s")
-  [ -f "$d" ] && [ "$(stat -c%s "$d")" = "$ssz" ] && continue
+  if [ -f "$d" ]; then
+    dsz=$(stat -c%s "$d")
+    [ "$dsz" -ge "$ssz" ] && [ $((dsz - ssz)) -lt "$ART_SLACK" ] && continue
+  fi
   legacy="$MOUNT/$rel"
   if [ "$legacy" != "$d" ] && [ -f "$legacy" ] && [ "$(stat -c%s "$legacy")" = "$ssz" ]; then
     echo "rename: $rel -> $dest"
@@ -160,6 +163,41 @@ while IFS=$'\t' read -r dest rel; do
   echo "copy:   $dest"
   if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$d")"; rsync -t --partial "$s" "$d"; fi
   copied=$((copied+1))
+done < "$WORK/map"
+
+# Art pass: embed 16:9 Plex background art into files that lack artwork.
+has_art() {
+  ffprobe -v error -show_streams -of json "$1" 2>/dev/null \
+    | jq -e '[.streams[] | select((.disposition.attached_pic // 0) == 1 or .codec_type == "attachment")] | length > 0' >/dev/null
+}
+arted=0
+while IFS=$'\t' read -r dest rel art; do
+  [ -n "$art" ] || continue
+  d="$MOUNT/$dest"; ext="${dest##*.}"
+  case "${ext,,}" in mp4|m4v|mov|mkv) ;; *) continue ;; esac
+  [ -f "$d" ] || continue
+  has_art "$d" && continue
+  jpg="$WORK/art/$(printf '%s' "$art" | md5sum | cut -d' ' -f1).jpg"
+  if [ ! -s "$jpg" ]; then
+    plex_img "$art" "$jpg" || { echo "WARN: art fetch failed: $dest" >&2; continue; }
+  fi
+  echo "art:    $dest"
+  [ "$DRY" -eq 1 ] && { arted=$((arted+1)); continue; }
+  tmp="$(dirname "$d")/.art-tmp.${ext,,}"
+  ok=0
+  case "${ext,,}" in
+    mkv)
+      ffmpeg -y -nostdin -v error -i "$d" -c copy -map 0 \
+        -attach "$jpg" -metadata:s:t mimetype=image/jpeg -metadata:s:t filename=cover.jpg "$tmp" && ok=1 || true ;;
+    *)
+      ffmpeg -y -nostdin -v error -i "$d" -i "$jpg" -map 0 -map 1:0 -c copy \
+        -disposition:v:1 attached_pic "$tmp" && ok=1 || true ;;
+  esac
+  if [ "$ok" -eq 1 ] && [ -s "$tmp" ]; then
+    mv -- "$tmp" "$d"; arted=$((arted+1))
+  else
+    rm -f -- "$tmp"; echo "WARN: art embed failed: $dest" >&2
+  fi
 done < "$WORK/map"
 
 # Remove card files (within Movies/ and TV/) that the manifest no longer lists.
@@ -176,7 +214,7 @@ if [ -s "$WORK/stale" ]; then
   fi
 fi
 
-echo "copied $copied, renamed $renamed, $(wc -l < "$WORK/stale") removed"
+echo "copied $copied, renamed $renamed, art-embedded $arted, $(wc -l < "$WORK/stale") removed"
 if [ "$DRY" -eq 0 ]; then
   cut -f1 "$WORK/map" > "$MOUNT/$MANIFEST"
   sync
