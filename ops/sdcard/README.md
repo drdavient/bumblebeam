@@ -32,6 +32,15 @@ Manual run: `./sync-sdcard.sh [--dry-run] [--init <N>]`.
   transcoding is done. If a title won't play in VLC, prefer swapping in a
   different encode over adding a transcode stage.
 
+## Tablet setup (Kindle Fire 7, VLC)
+
+- VLC → Settings → **Directories**: tick the SD card storage root, or the Video
+  tab never indexes the card (Browse works regardless). If the library goes
+  stale after a card swap, Settings → Advanced → Clear media database.
+- Keep **"Install supported apps on SD card" off** (Fire Settings → Storage):
+  apps on a swapped-out card break. Downloads on card are harmless.
+- Always **Safely remove** (Fire Settings → Storage) before popping the card.
+
 ## Install (once per host)
 
 ```sh
