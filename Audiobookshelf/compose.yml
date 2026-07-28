@@ -10,10 +10,13 @@ services:
       - /mnt/Elements/media/audiobooks:/audiobooks:ro
       - /mnt/Elements/media/books:/books:ro
     networks:
-      - traefik-net
+      traefik-net: {}
       # gluetun-net so Shelfarr (inside gluetun's namespace) can reach the ABS
-      # API for import scans; gluetun permits its own attached subnet.
-      - gluetun-net
+      # API for import scans; gluetun permits its own attached subnet. Static
+      # IP because the namespace resolves via VPN DNS, not Docker's — Shelfarr
+      # must target ABS by address, so it must not drift.
+      gluetun-net:
+        ipv4_address: 172.18.0.250
     labels:
       traefik.enable: "true"
       traefik.docker.network: traefik-net
