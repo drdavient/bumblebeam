@@ -8,16 +8,28 @@ services:
       - ./config:/config
       - ./metadata:/metadata
       - /mnt/Elements/media/audiobooks:/audiobooks:ro
+      - /mnt/Elements/media/books:/books:ro
     networks:
       - traefik-net
+      # gluetun-net so Shelfarr (inside gluetun's namespace) can reach the ABS
+      # API for import scans; gluetun permits its own attached subnet.
+      - gluetun-net
     labels:
       traefik.enable: "true"
       traefik.docker.network: traefik-net
       traefik.http.routers.audiobookshelf.rule: "Host(`audiobookshelf`, `audiobookshelf.svc.home.arpa`)"
       traefik.http.routers.audiobookshelf.entrypoints: web
       traefik.http.services.audiobookshelf.loadbalancer.server.port: "80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/healthcheck || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
 
 networks:
   traefik-net:
+    external: true
+  gluetun-net:
     external: true
