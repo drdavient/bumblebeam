@@ -93,7 +93,7 @@ if [[ ! -f "$LOCAL_REPOSITORY/config" ]]; then
 fi
 
 running_containers=()
-stateful_containers=(deluge radarr sonarr prowlarr shelfarr audiobookshelf n8n homeassistant plex structurizr-server traefik zigbee2mqtt)
+stateful_containers=(deluge radarr sonarr prowlarr shelfarr bookshelf audiobookshelf n8n homeassistant plex structurizr-server traefik zigbee2mqtt)
 restart_containers() {
   if ((${#running_containers[@]})); then
     log "restarting previously running containers: ${running_containers[*]}"

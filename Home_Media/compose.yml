@@ -16,6 +16,7 @@ services:
       - 8191:8191              # FlareSolverr
       - 9696:9696              # Prowlarr
       - 5056:5056              # Shelfarr web interface
+      - 8787:8787              # Bookshelf (Readarr successor)
       # - 8080:8080                  # Nginx web portal
       # - 8388:8388/tcp              # Shadowsocks TCP
       # - 8388:8388/udp              # Shadowsocks UDP
@@ -115,6 +116,29 @@ services:
     volumes:
       - ./shelfarr-data:/rails/storage
       - /mnt/Elements/media/audiobooks:/audiobooks
+      - /mnt/Elements/Downloads/Transmission/:/downloads
+    depends_on:
+      vpn:
+        condition: service_started
+      elements-waiter:
+        condition: service_healthy
+    network_mode: "container:gluetun"
+    restart: unless-stopped
+
+  bookshelf:
+    # Maintained Readarr fork (Readarr retired 2025-07, metadata service dead).
+    # hardcover tag = Hardcover metadata via hardcover.bookinfo.pro (shared
+    # rreading-glasses proxy); if that degrades, self-host rreading-glasses.
+    image: ghcr.io/pennydreadful/bookshelf:hardcover
+    container_name: bookshelf
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - UMASK=022
+    volumes:
+      - ./bookshelf-config:/config
+      - /mnt/Elements/media/books:/books
       - /mnt/Elements/Downloads/Transmission/:/downloads
     depends_on:
       vpn:
