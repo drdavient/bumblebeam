@@ -94,9 +94,19 @@ transcode_one() {
   local rc=$?
   [ $rc -eq 0 ] || { log "FAIL encode (rc=$rc): $in"; rm -f -- "$out"; return 1; }
 
+  # Compare VIDEO stream durations — container duration reflects the longest
+  # stream, and a trailing audio tail (e.g. Addams Family: audio 7s past video)
+  # would falsely fail an output whose video is complete.
+  vdur() {
+    local d
+    d=$(ffprobe -v error -select_streams v:0 -show_entries stream=duration -of csv=p=0 "$1" | cut -d. -f1)
+    case "$d" in ''|N/A) d=$(ffprobe -v error -select_streams v:0 -show_entries stream_tags=DURATION -of csv=p=0 "$1" \
+      | awk -F: 'NF==3{printf "%d", $1*3600+$2*60+$3}') ;; esac
+    [ -n "$d" ] || d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$1" | cut -d. -f1)
+    echo "$d"
+  }
   local din dout
-  din=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$in" | cut -d. -f1)
-  dout=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$out" | cut -d. -f1)
+  din=$(vdur "$in"); dout=$(vdur "$out")
   if [ -z "$dout" ] || [ $((din - dout)) -gt 5 ] || [ $((dout - din)) -gt 5 ]; then
     log "FAIL duration ($din vs ${dout:-none}): $in"; rm -f -- "$out"; return 1
   fi
