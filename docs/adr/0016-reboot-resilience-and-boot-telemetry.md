@@ -55,6 +55,30 @@ recordfail deduction).
    "kernel-update-like" reboots (kernel pkg reinstall first), gaps read from
    `/var/lib/reboot-telemetry/log` (norm ≤90s).
 
+## Amendment (2026-07-31, first test cycle)
+
+The first supervised test reboot and its aftermath taught four things:
+
+1. **Warm reboots can bring the box up with the Elements USB disk absent**
+   (observed 20:12 boot) — the mild form of the same platform warm-reboot/USB
+   defect as H1; further weight behind the BIOS update.
+2. **The rebooter's container could not start in exactly that scenario** —
+   bind-mounting `/mnt/Elements` fails ("no such device") when the drive is
+   absent, so the safety net silently no-ops. Fixed: no Elements bind; all
+   checks via nsenter into the host mount namespace; reboot is now orderly
+   (`systemctl reboot` via nsenter, `reboot -f` fallback) so it writes the
+   telemetry marker and re-arms the shutdown watchdog.
+3. **Deploy discipline**: `docker compose run` and the boot-check service use
+   the *built image* — editing `mount-rebooter.sh` without `docker compose
+   build` runs stale code. This caused two spurious host reboots during
+   testing (old in-image script + new bind-less compose = guaranteed false
+   "drive missing"). Always rebuild before exercising the rebooter.
+4. **Telemetry fixes from live data**: the shutdown-marker unit needed
+   explicit `Conflicts=shutdown.target`/`Before=shutdown.target`
+   (`DefaultDependencies=no` drops the implicit ones, so ExecStop never ran);
+   and `grubenv=[recordfail=1]` in the boot capture is *normal* (GRUB sets it
+   for the in-progress boot; grub-common clears it after our capture).
+
 ## Consequences
 
 - Any future hang is attributable from a file instead of unexplained: see

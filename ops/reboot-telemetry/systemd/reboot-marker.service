@@ -5,6 +5,11 @@ Description=Reboot telemetry: shutdown-complete marker (ADR 0016)
 DefaultDependencies=no
 After=local-fs.target
 Before=sysinit.target
+# DefaultDependencies=no drops the implicit Conflicts=shutdown.target — without
+# these two lines systemd never stops the unit at shutdown and ExecStop (the
+# whole point) never runs.
+Conflicts=shutdown.target
+Before=shutdown.target
 
 [Service]
 Type=oneshot

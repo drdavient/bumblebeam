@@ -5,7 +5,9 @@ services:
     pid: host
     privileged: true
     volumes:
-      - /mnt/Elements:/mnt/Elements:ro
+      # NO /mnt/Elements bind here: when the drive is absent the bind fails and
+      # the container never starts — exactly the case this service must handle.
+      # All disk checks go through nsenter into the host mount namespace.
       - /var/log/mount-rebooter:/var/log/mount-rebooter
       - /var/lib/mount-rebooter:/state
     environment:

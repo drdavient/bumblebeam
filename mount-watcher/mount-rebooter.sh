@@ -23,15 +23,18 @@ REBOOT_COUNT=$(cat "$STATE_FILE")
 log "mount-rebooter started, rebootCount=$REBOOT_COUNT"
 
 is_mounted_ok() {
-    # Query the host mount namespace; /mnt/Elements is intentionally bind-mounted
-    # read-only inside this container.
+    # All checks go through the HOST mount namespace via nsenter — the container
+    # must not bind-mount /mnt/Elements, because when the drive is absent the
+    # bind fails and the container never starts, defeating the whole safety net
+    # (observed 2026-07-31, ADR 0016).
     HOST_RECORD="$(nsenter -t 1 -m -- findmnt -rn -T /mnt/Elements -o UUID,OPTIONS 2>/dev/null | awk 'NF >= 2 { print; exit }')"
     read -r HOST_UUID HOST_OPTIONS <<EOF
 $HOST_RECORD
 EOF
     [ "$HOST_UUID" = "$UUID" ] && \
         printf '%s' "$HOST_OPTIONS" | tr ',' '\n' | grep -qx rw && \
-        [ -f /mnt/Elements/.mount-ok ] && [ -d /mnt/Elements/Video ]
+        nsenter -t 1 -m -- test -f /mnt/Elements/.mount-ok && \
+        nsenter -t 1 -m -- test -d /mnt/Elements/Video
 }
 
 is_expected_disk_read_only() {
@@ -75,8 +78,10 @@ if [ "$REBOOT_COUNT" -lt "$MAX_REBOOTS" ]; then
     echo "$NEW_COUNT" > "$STATE_FILE"
     log "Rebooting host, rebootCount=${NEW_COUNT}/${MAX_REBOOTS}"
 
-    # Direct kernel reboot syscall is most reliable
-    /sbin/reboot -f
+    # Prefer an orderly host reboot: it writes the shutdown-telemetry marker and
+    # re-arms the shutdown watchdog (ADR 0016). Fall back to the direct kernel
+    # reboot syscall only if that fails.
+    nsenter -t 1 -m -u -i -n -p -- /usr/bin/systemctl reboot || /sbin/reboot -f
 else
     log "MAX_REBOOTS reached (${REBOOT_COUNT}). NOT rebooting."
 fi

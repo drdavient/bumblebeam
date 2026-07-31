@@ -29,7 +29,10 @@ directory makes the machine safe and self-documenting in the meantime.
 - Marker **absent** for a shutdown you know happened ⇒ hang was in late
   systemd-shutdown / kernel reset (H2) → try `reboot=pci` (then `acpi`) in
   `GRUB_CMDLINE_LINUX_DEFAULT`.
-- `recordfail=1` in the grubenv capture ⇒ a kernel was handed off and never
-  completed boot (H4).
+- `grubenv=[recordfail=1]` is **normal** — GRUB sets it for the in-progress
+  boot and grub-common clears it moments after our capture. Its only signal
+  value: with `GRUB_RECORDFAIL_TIMEOUT=5` a leftover flag from a genuinely
+  failed boot costs a 5s menu; the meaningful discriminators are the marker
+  and the gap.
 - Box came back by itself ~3min after a hang ⇒ the watchdog rescued it (H2
   confirmed).
