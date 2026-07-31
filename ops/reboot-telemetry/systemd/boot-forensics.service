@@ -1,0 +1,12 @@
+[Unit]
+Description=Reboot telemetry: boot forensics (ADR 0016)
+# Must run BEFORE grub-common.service, which clears the grubenv recordfail
+# flag — that flag is the evidence of whether GRUB reached kernel handoff.
+Before=grub-common.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/drdavient/docker/ops/reboot-telemetry/reboot-telemetry.sh boot
+
+[Install]
+WantedBy=multi-user.target

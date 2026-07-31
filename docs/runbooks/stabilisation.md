@@ -177,3 +177,14 @@ Daily retention is 7 daily, 4 weekly, and 12 monthly. Monthly checks rotate thro
 one twelfth of local pack data and restore representative state from local and
 remote repositories. Perform a quarterly isolated service-state restore drill and
 review actual repository growth and quota headroom.
+
+## 7. Reboot hangs
+
+`sudo reboot` can intermittently hang in the BIOS/POST window (old BIOS 0037 —
+see ADR 0016; the designated fix is the pending BIOS-update session). Until
+then: schedule reboots when someone can reach the power button; if the box
+does not return within ~3 minutes (the watchdog's rescue window), power-cycle
+it. Afterwards read `/var/lib/reboot-telemetry/log` and follow the decision
+tree in `ops/reboot-telemetry/README.md` — the `marker-to-kernel-gap` line
+attributes the outage (BIOS/GRUB vs kernel-shutdown) and captures the grubenv
+recordfail state from before grub-common clears it.

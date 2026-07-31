@@ -1,0 +1,16 @@
+[Unit]
+Description=Reboot telemetry: shutdown-complete marker (ADR 0016)
+# Started very early at boot so that its ExecStop runs very LATE in shutdown —
+# after services have stopped, just before local filesystems unmount.
+DefaultDependencies=no
+After=local-fs.target
+Before=sysinit.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/home/drdavient/docker/ops/reboot-telemetry/reboot-telemetry.sh marker
+
+[Install]
+WantedBy=sysinit.target
