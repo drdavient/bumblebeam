@@ -49,6 +49,17 @@ the two logs is the result. A runaway guard also disarms after 4×N boots.
 **The known risk stands**: an H1 hang mid-run leaves the box down until
 someone presses the power button. Arm it when that's acceptable.
 
+### Watching from a phone (`watch-reboot-test.sh`)
+
+An outside witness for the trial — run it on any box that isn't Bumblebeam,
+typically Termux on a phone (setup instructions in the script header). It
+probes TCP port 22 every 5s, fetches `reboot-test.sh status` over ssh while
+up, and shows DOWN duration with a loud "LIKELY HUNG — press the power
+button" alarm (plus Termux notification/vibration if `termux-api` is
+installed) once the box has been unreachable for 5 minutes. Normal reboots
+show as DOWN episodes of 1–3 minutes; a USB-recovery double reboot shows as
+two in quick succession.
+
 ## Reading the log after an incident
 
 - Normal reboot: `marker-to-kernel-gap` ≈ 10–60s.
