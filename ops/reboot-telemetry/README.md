@@ -20,6 +20,34 @@ directory makes the machine safe and self-documenting in the meantime.
   — a kernel-side hang self-recovers in minutes; gated on the module actually
   working (skipped with a message if inert).
 - Removes the dead `99-usb-mount.rules`/`usb-mount.sh` udev hook.
+- `reboot-test.service` — unattended soak-test entry point; **inert** unless
+  armed (below).
+
+## Unattended soak test (`reboot-test.sh`)
+
+Runs the ADR 0016 verification matrix without a human in the loop:
+
+```
+sudo ./reboot-test.sh arm        # 5 automated reboots, last 2 kernel-like
+sudo reboot                      # kick off
+./reboot-test.sh status          # any time; also after it finishes
+sudo ./reboot-test.sh disarm     # bail out
+```
+
+Each healthy boot: verifies the *previous* reboot from the telemetry log
+(marker present, gap ≤ 300s), waits up to 4 min for Elements (an absent drive
+defers to the mount-rebooter — its recovery reboot doesn't consume a cycle),
+settles 3 min, refuses to reboot under an active SD-card sync, then initiates
+the next reboot. "Kernel-like" cycles reinstall the running kernel package
+first (initramfs + grub.cfg regenerated — the incident conditions).
+
+**Abort semantics**: any hang evidence (missing marker, or gap > 300s — e.g.
+the boot after your manual power-cycle) disarms the run immediately, so a
+stranded box never reboots itself again once you rescue it. The evidence in
+the two logs is the result. A runaway guard also disarms after 4×N boots.
+
+**The known risk stands**: an H1 hang mid-run leaves the box down until
+someone presses the power button. Arm it when that's acceptable.
 
 ## Reading the log after an incident
 

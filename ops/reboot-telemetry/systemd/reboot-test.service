@@ -1,0 +1,14 @@
+[Unit]
+Description=Reboot telemetry: unattended reboot soak test (ADR 0016)
+# Inert unless armed via reboot-test.sh arm — the boot entry point exits
+# immediately when /var/lib/reboot-test/remaining is absent.
+After=multi-user.target bumblebeam-elements-boot-check.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/drdavient/docker/ops/reboot-telemetry/reboot-test.sh boot
+# The armed path sleeps (settle window, SD-sync guard) before rebooting.
+TimeoutStartSec=45min
+
+[Install]
+WantedBy=multi-user.target

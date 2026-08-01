@@ -79,6 +79,19 @@ The first supervised test reboot and its aftermath taught four things:
    and `grubenv=[recordfail=1]` in the boot capture is *normal* (GRUB sets it
    for the in-progress boot; grub-common clears it after our capture).
 
+## Amendment (2026-08-01, unattended soak harness)
+
+After two clean supervised reboots, the Phase 2/4 verification matrix was
+automated as `ops/reboot-telemetry/reboot-test.sh` + `reboot-test.service`
+(inert unless armed). Armed, each healthy boot verifies the previous cycle
+from the telemetry log (marker present, gap ≤ 300s), waits for Elements
+(absent drive defers to the mount-rebooter, whose recovery reboot consumes no
+cycle), then initiates the next reboot — default 5 cycles, the last 2
+kernel-update-like (kernel package reinstalled first). Any hang evidence
+disarms the run so a manually rescued box never self-reboots again; a 4×N
+boot-counter guard backstops runaways. The unattended-hang risk is accepted
+by whoever arms it.
+
 ## Consequences
 
 - Any future hang is attributable from a file instead of unexplained: see

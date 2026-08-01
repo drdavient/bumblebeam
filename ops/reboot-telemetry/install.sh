@@ -24,6 +24,11 @@ cp "$DIR/systemd/reboot-marker.service" "$DIR/systemd/boot-forensics.service" /e
 systemctl daemon-reload
 systemctl enable --now reboot-marker.service boot-forensics.service
 
+echo "== unattended soak-test unit (inert until reboot-test.sh arm)"
+cp "$DIR/systemd/reboot-test.service" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable reboot-test.service
+
 echo "== hardware watchdog gate"
 modprobe iTCO_wdt 2>/dev/null || true
 if [ -e /dev/watchdog0 ] && ! dmesg | grep -qi "failed to reset NO_REBOOT"; then
