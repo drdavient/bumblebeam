@@ -92,6 +92,13 @@ disarms the run so a manually rescued box never self-reboots again; a 4×N
 boot-counter guard backstops runaways. The unattended-hang risk is accepted
 by whoever arms it.
 
+First armed run caught a probe bug: `findmnt -T` on an automounted path
+returns **both** the autofs stub and the real mount, so a whole-output UUID
+comparison never matches — health checks must select the record by UUID (as
+the mount-rebooter's awk parse already did). The failure mode was benign by
+design: the harness deferred to the (correctly passing) rebooter and parked,
+consuming no cycles.
+
 ## Consequences
 
 - Any future hang is attributable from a file instead of unexplained: see

@@ -34,9 +34,13 @@ log() { mkdir -p "$STATE"; echo "$(date -Is) $*" >> "$LOG"; }
 
 drive_healthy() {
     # test -f first: it triggers the automount if only the autofs stub is up
-    [ -f /mnt/Elements/.mount-ok ] && [ -d /mnt/Elements/Video ] &&
-    [ "$(findmnt -rn -T /mnt/Elements -o UUID 2>/dev/null)" = "$ELEMENTS_UUID" ] &&
-    findmnt -rn -T /mnt/Elements -o OPTIONS | tr ',' '\n' | grep -qx rw
+    [ -f /mnt/Elements/.mount-ok ] && [ -d /mnt/Elements/Video ] || return 1
+    # findmnt -T on an automounted path returns BOTH the autofs stub and the
+    # real mount — select the record by UUID, then require rw (same parse as
+    # the mount-rebooter).
+    findmnt -rn -T /mnt/Elements -o UUID,OPTIONS 2>/dev/null | \
+        awk -v uuid="$ELEMENTS_UUID" 'NF >= 2 && $1 == uuid { print $2 }' | \
+        tr ',' '\n' | grep -qx rw
 }
 
 abort() {
