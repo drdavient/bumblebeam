@@ -105,6 +105,19 @@ UUID comparison never matches — health checks must select the record by UUID
 (as the rebooters' parses already did). The harness parked benignly on this
 until restarted with the fix.
 
+**Result (2026-08-01, ~10:50–11:40): full pass.** 5/5 automated reboots
+verified (3 plain + 2 kernel-like with the kernel package reinstalled), 12
+warm reboots total including recoveries — every shutdown marker present,
+every marker→kernel gap 33–54s, zero hangs. New evidence: **today every
+warm reboot (7/7) booted with Elements absent** and the native rebooter
+recovered it each time (~4 min/cycle, counter never past 1/3); the previous
+evening's two reboots had kept the drive, so the dropout is common but not
+universal. Boots without the drive show gap ≈33s, recovered boots with the
+drive enumerated ≈53s — POST spends ~20s on the USB disk when present.
+Both point at the legacy BIOS's USB handling: further H1 weight. Phase 2
+verification is green; re-running the matrix after the BIOS session is a
+one-liner (`reboot-test.sh arm`).
+
 ## Consequences
 
 - Any future hang is attributable from a file instead of unexplained: see
