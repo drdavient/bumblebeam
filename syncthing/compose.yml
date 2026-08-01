@@ -4,31 +4,19 @@ services:
     container_name: syncthing
     hostname: bumblebeam
     restart: unless-stopped
+    # Host networking: Syncthing sits directly on the LAN, so local discovery
+    # and broadcasts work natively — phones/laptops find "bumblebeam" without
+    # static addresses. The UI is reverse-proxied by the traefik FILE provider
+    # (traefik/dynamic.yml -> http://192.168.1.15:8384), not docker labels.
+    network_mode: host
     environment:
       PUID: "1000"
       PGID: "1000"
       TZ: Europe/London
       STNODEFAULTFOLDER: "true"
+      STGUIADDRESS: 0.0.0.0:8384
     volumes:
       - ./config:/var/syncthing/config
       # General share area: anything Syncthing serves lives under ./data
       # (first share: data/phones/winter — the Plex-driven phone pipeline).
       - ./data:/data
-    ports:
-      # Sync protocol + local discovery. The container announces its bridge
-      # IP, so LAN peers should use a static address: tcp://192.168.1.15:22000
-      - "22000:22000/tcp"
-      - "22000:22000/udp"
-      - "21027:21027/udp"
-    networks:
-      - traefik-net
-    labels:
-      traefik.enable: "true"
-      traefik.docker.network: traefik-net
-      traefik.http.routers.syncthing.rule: "Host(`syncthing`, `syncthing.svc.home.arpa`)"
-      traefik.http.routers.syncthing.entrypoints: web
-      traefik.http.services.syncthing.loadbalancer.server.port: "8384"
-
-networks:
-  traefik-net:
-    external: true

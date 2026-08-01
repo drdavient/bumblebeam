@@ -35,6 +35,11 @@ http:
       service: shelfarr
       entryPoints: ["web"]
 
+    syncthing:
+      rule: "Host(`syncthing`, `syncthing.svc.home.arpa`)"
+      service: syncthing
+      entryPoints: ["web"]
+
     traefik-dashboard:
       rule: "Host(`traefik`, `traefik.svc.home.arpa`, `traefik.home.arpa`)"
       service: api@internal
@@ -75,3 +80,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://gluetun:5056"
+
+    syncthing:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.15:8384"
