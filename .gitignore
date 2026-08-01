@@ -92,6 +92,9 @@ n8n/data/
 zigbee/zigbee2mqtt/data/
 zigbee/mosquitto/config/passwd
 seerr/config/
+# Syncthing: config holds device keys/API key; data is synced content (bulk)
+syncthing/config/
+syncthing/data/
 # Windows focus agent local config holds the broker password (in Bitwarden).
 windows-focus-agent/config.ini
 # discover-dnd.ps1 output: machine-specific registry dumps, diagnostic only

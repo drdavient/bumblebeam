@@ -24,6 +24,9 @@
 #   sync-sdcard.sh              sync the inserted card per its marker
 #   sync-sdcard.sh --init 2     stamp the inserted card as card 2, then sync
 #   sync-sdcard.sh --dry-run    show what would change without writing
+#   sync-sdcard.sh --dest DIR --collection NAME
+#                               sync collection NAME into directory DIR instead
+#                               of a card (e.g. a Syncthing-shared phone folder)
 
 set -euo pipefail
 
@@ -38,37 +41,52 @@ ART_SLACK=2097152   # embedded art head-room the copy-check tolerates (bytes)
 die() { echo "ERROR: $*" >&2; exit 1; }
 san() { printf '%s' "$1" | tr '\\/:*?"<>|' '-' | sed 's/[. ]*$//'; }  # exFAT-safe
 
-DRY=0 INIT=""
+DRY=0 INIT="" DEST="" COLLECTION=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;
     --init) shift; INIT="${1:-}"; [[ "$INIT" =~ ^[0-9]+$ ]] || die "--init needs a card number" ;;
+    --dest) shift; DEST="${1:-}"; [ -n "$DEST" ] || die "--dest needs a directory" ;;
+    --collection) shift; COLLECTION="${1:-}"; [ -n "$COLLECTION" ] || die "--collection needs a name" ;;
     *) die "unknown argument: $1" ;;
   esac
   shift
 done
-
-# Never run two syncs at once (e.g. udev firing on a reinsertion mid-sync).
-exec 9>/tmp/sdcard-sync.lock
-flock -n 9 || die "another sync is already running"
-
-# Touch the path so systemd automount mounts an inserted card. Retry for up to
-# 30s: when udev triggers us on insertion, the partition may not be ready yet.
-for _ in $(seq 1 15); do
-  ls "$MOUNT" >/dev/null 2>&1 || true
-  mountpoint -q "$MOUNT" && break
-  sleep 2
-done
-mountpoint -q "$MOUNT" || die "no SD card mounted at $MOUNT (waited 30s)"
-
-if [ -n "$INIT" ] && [ "$DRY" -eq 0 ]; then
-  echo "$INIT" > "$MOUNT/$MARKER"
+if [ -n "$DEST" ] || [ -n "$COLLECTION" ]; then
+  [ -n "$DEST" ] && [ -n "$COLLECTION" ] || die "--dest and --collection go together"
+  [ -n "$INIT" ] && die "--init only applies to cards"
 fi
-[ -f "$MOUNT/$MARKER" ] || die "card has no $MARKER — run with --init <1|2> to stamp it"
-CARD=$(tr -cd '0-9' < "$MOUNT/$MARKER")
-[ -n "$CARD" ] || die "unreadable card id in $MOUNT/$MARKER"
-COLLECTION="SD Card $CARD"
-echo "Card $CARD inserted — syncing Plex collection '$COLLECTION'"
+
+# Never run two syncs of the same target at once (e.g. udev firing on a
+# reinsertion mid-sync, or an overlapping cron run).
+exec 9>"/tmp/sdcard-sync-$(printf '%s' "${DEST:-$MOUNT}" | md5sum | cut -d' ' -f1).lock"
+flock -n 9 || die "another sync of this target is already running"
+
+if [ -n "$DEST" ]; then
+  # Directory target: no card, no marker — the collection is given explicitly.
+  [ -d "$(dirname "$DEST")" ] || die "parent of --dest does not exist: $DEST"
+  mkdir -p "$DEST"
+  MOUNT="$DEST"
+  echo "Syncing Plex collection '$COLLECTION' into $DEST"
+else
+  # Touch the path so systemd automount mounts an inserted card. Retry for up
+  # to 30s: when udev triggers us on insertion, the partition may not be ready.
+  for _ in $(seq 1 15); do
+    ls "$MOUNT" >/dev/null 2>&1 || true
+    mountpoint -q "$MOUNT" && break
+    sleep 2
+  done
+  mountpoint -q "$MOUNT" || die "no SD card mounted at $MOUNT (waited 30s)"
+
+  if [ -n "$INIT" ] && [ "$DRY" -eq 0 ]; then
+    echo "$INIT" > "$MOUNT/$MARKER"
+  fi
+  [ -f "$MOUNT/$MARKER" ] || die "card has no $MARKER — run with --init <1|2> to stamp it"
+  CARD=$(tr -cd '0-9' < "$MOUNT/$MARKER")
+  [ -n "$CARD" ] || die "unreadable card id in $MOUNT/$MARKER"
+  COLLECTION="SD Card $CARD"
+  echo "Card $CARD inserted — syncing Plex collection '$COLLECTION'"
+fi
 
 TOKEN=$(sed -n 's/.*PlexOnlineToken="\([^"]*\)".*/\1/p' "$PREFS")
 [ -n "$TOKEN" ] || die "could not read Plex token from Preferences.xml"

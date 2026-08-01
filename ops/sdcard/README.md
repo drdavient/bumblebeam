@@ -41,6 +41,26 @@ Manual run: `./sync-sdcard.sh [--dry-run] [--init <N>]`.
   apps on a swapped-out card break. Downloads on card are harmless.
 - Always **Safely remove** (Fire Settings → Storage) before popping the card.
 
+## Phone targets (Syncthing)
+
+The same script also feeds phones over WiFi: `--dest DIR --collection NAME`
+syncs a named collection into a directory instead of a card (no marker, no
+mount logic; same pretty names, embedded art, scoped deletion). The
+directories live under `syncthing/data/phones/<name>` and are shared by the
+Syncthing container (`syncthing/compose.yml`, UI at
+`http://syncthing.svc.home.arpa`) as **send-only** folders, so phone-side
+deletions never propagate back and get re-filled on the next sync.
+
+Current target: Winter's OnePlus 6 — collection "Phone - Winter", folder id
+`winter-phone`, refreshed daily at 04:30 by drdavient's crontab. VLC on the
+phone indexes the synced folder.
+
+Phone-side pairing (once): install Syncthing (F-Droid/Play) → menu → Show
+device ID on the server UI → add remote device on the phone with address
+`tcp://192.168.1.15:22000` (the container announces a bridge IP, so local
+discovery alone won't find it) → accept the share; set the folder to
+receive-only on the phone.
+
 ## Install (once per host)
 
 ```sh
