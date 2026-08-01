@@ -92,12 +92,18 @@ disarms the run so a manually rescued box never self-reboots again; a 4×N
 boot-counter guard backstops runaways. The unattended-hang risk is accepted
 by whoever arms it.
 
-First armed run caught a probe bug: `findmnt -T` on an automounted path
-returns **both** the autofs stub and the real mount, so a whole-output UUID
-comparison never matches — health checks must select the record by UUID (as
-the mount-rebooter's awk parse already did). The failure mode was benign by
-design: the harness deferred to the (correctly passing) rebooter and parked,
-consuming no cycles.
+The first armed run surfaced two things. (a) The USB-absent recovery reboot
+is actually performed by a **native host `mount-rebooter.service`**
+(`/usr/local/bin/mount-rebooter.sh`, 120s wait, orderly `systemctl reboot`)
+that predates and duplicates the dockerised boot-check; it fired before
+`multi-user.target` was reached, so the soak harness never ran on that boot —
+correct behaviour, no cycle consumed, and both rebooters share
+`/var/lib/mount-rebooter/reboot_count` so they don't fight. Consolidating the
+two is a recorded follow-up. (b) A probe bug: `findmnt -T` on an automounted
+path returns **both** the autofs stub and the real mount, so a whole-output
+UUID comparison never matches — health checks must select the record by UUID
+(as the rebooters' parses already did). The harness parked benignly on this
+until restarted with the fix.
 
 ## Consequences
 
