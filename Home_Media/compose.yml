@@ -22,6 +22,10 @@ services:
       # - 8388:8388/udp              # Shadowsocks UDP
     volumes:
       - ./gluetun-files:/gluetun
+    environment:
+      # Refresh the provider server list daily so a retired VPN endpoint can't
+      # strand the tunnel on a stale list (two-week outage, 2026-08-13..27).
+      - UPDATER_PERIOD=24h
     env_file:
       - .env
     restart: unless-stopped
