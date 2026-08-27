@@ -32,3 +32,35 @@ strong { margin-bottom: .28rem; font-size: 1rem; }
 small { color: var(--muted); line-height: 1.35; }
 .arrow { color: var(--amber); font-size: 1.25rem; }
 @media (max-width: 760px) { .shell { width: min(100% - 1.5rem, 560px); padding-top: 3rem; } .grid { grid-template-columns: 1fr; } }
+
+/* Tabs (Services / Health) */
+.tabs { display: flex; gap: .4rem; margin-bottom: 2.6rem; }
+.tab { padding: .5rem 1.1rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .88rem; font-weight: 650; text-decoration: none; transition: color .18s ease, border-color .18s ease; }
+.tab:hover { color: var(--ink); border-color: var(--amber); }
+.tab[aria-current="page"] { color: var(--ink); border-color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, transparent); }
+
+/* Health dashboard */
+.hero--compact { margin-bottom: 3rem; }
+.hero--compact h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
+.refresh { margin-left: 1rem; padding: .4rem .95rem; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-size: .85rem; cursor: pointer; transition: color .18s ease, border-color .18s ease; }
+.refresh:hover { color: var(--ink); border-color: var(--amber); }
+.refresh:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+
+/* Status colors are reserved for state and always paired with a text label. */
+:root { --status-good: #0ca30c; --status-warning: #fab219; --status-critical: #d03b3b; }
+.tile { display: grid; grid-template-columns: auto 1fr auto; gap: .9rem; align-items: center; min-height: 96px; padding: 1.1rem 1.2rem; border: 1px solid var(--line); border-radius: 1rem; background: color-mix(in srgb, var(--panel) 88%, transparent); }
+.tile-glyph { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: .65rem; background: #37312a; font-weight: 800; color: var(--muted); }
+.tile-state { justify-self: end; font-size: .82rem; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tile-detail { color: var(--muted); }
+.tile[data-state="up"] .tile-glyph { color: var(--status-good); }
+.tile[data-state="up"] .tile-state { color: var(--status-good); }
+.tile[data-state="slow"] .tile-glyph { color: var(--status-warning); }
+.tile[data-state="slow"] .tile-state { color: var(--status-warning); }
+.tile[data-state="down"] .tile-glyph { color: var(--status-critical); }
+.tile[data-state="down"] .tile-state { color: var(--status-critical); }
+.tile[data-state="down"] { border-color: color-mix(in srgb, var(--status-critical) 45%, var(--line)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .tab, .refresh { transition: none; }
+  .card:hover { transform: none; }
+}
