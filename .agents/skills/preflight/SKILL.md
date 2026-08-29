@@ -2,7 +2,7 @@
 name: preflight
 description: >-
   Session-start anomaly report for this repo. Run at the start of every working
-  session (claude-code gets it injected automatically via a SessionStart hook);
+  session (skip if a PREFLIGHT report was already injected into your context);
   then map each reported anomaly to its fix before starting new work.
 ---
 
@@ -28,9 +28,10 @@ bash .agents/skills/preflight/preflight.sh
 ```
 
 It always exits 0 and prints either one `PREFLIGHT OK` line or a findings list.
-claude-code sessions receive this output automatically (SessionStart hook in
-`.claude/settings.json`); other harnesses run it per the session-start rule in
-`.agents/AGENTS.md`.
+A harness with session-start hook support receives this output automatically
+(wired as tool-native config by `/onboard-harness`); any other harness runs it
+per the session-start rule in `.agents/AGENTS.md`. Either way, a PREFLIGHT
+report already in context means it has run — do not run it twice.
 
 ## Interpreting findings
 

@@ -1,7 +1,6 @@
 # Bumblebeam — agent instructions
 
-Canonical, harness-agnostic instructions for any AI coding harness — claude-code,
-codex, opencode, gemini-cli, grok-cli, or whatever comes next — working in this
+Canonical, harness-agnostic instructions for any AI coding harness working in this
 repo. This file is the single source of truth. Every harness reaches it through a
 thin shim at the path that harness natively reads; run the **`/onboard-harness`**
 skill to wire a new harness in.
@@ -83,19 +82,12 @@ the knowledge** (not the memory file) into versioned guidance:
 
 ## Configuration standard
 
-- **This file is the source of truth. Do not generate a standalone `CLAUDE.md` (or
-  other per-harness instruction copy) — harnesses reach this file through a thin
-  shim.**
-- Canonical shared instructions: **`.agents/AGENTS.md`** (this file).
-- Canonical shared skills: **`.agents/skills/`** (read natively by codex; reached by
-  claude-code via the `.claude/skills` symlink).
-- Each harness gets a thin shim at the path it natively reads, pointing back here.
-  Only genuinely tool-native config (auth, sandbox, model policy) lives under that
-  harness's own directory, and credential/session state stays out of Git.
-- Two global skills implement this standard (installed under `~/.agents/skills/`, so
-  they surface in every project):
-  - **`/onboard-harness`** — the entry point; wires a harness into this standard
-    (runs `/bootstrap-project` first if `.agents/AGENTS.md` is missing/empty).
-  - **`/bootstrap-project`** — establishes/extends `.agents/AGENTS.md`, idempotently
-    and without clobbering existing content. Normally invoked by `/onboard-harness`;
-    run directly only for a content top-up.
+- **This file is the source of truth. Never replace a harness shim (`CLAUDE.md`,
+  the root `AGENTS.md`, …) with a standalone instruction copy — every harness
+  reaches this file through its thin shim.**
+- Canonical shared instructions: **`.agents/AGENTS.md`** (this file). Canonical
+  shared skills: **`.agents/skills/`**.
+- All wiring mechanics — which path each harness reads, shims, symlinks,
+  tool-native config, ignore rules, session-start hooks — live in the global
+  **`/onboard-harness`** skill. Run it to wire a harness in; do not restate its
+  mechanics here.
